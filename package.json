@@ -1,0 +1,22 @@
+{
+  "name": "marketpilot-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MarketPilot AI — Prediction-market strategy automation platform",
+  "scripts": {
+    "dev": "npx turbo run dev",
+    "build": "npx turbo run build",
+    "lint": "npx turbo run lint",
+    "test": "npx turbo run test",
+    "db:generate": "npx turbo run db:generate --filter=@marketpilot/database",
+    "db:push": "npx turbo run db:push --filter=@marketpilot/database",
+    "db:seed": "npx turbo run db:seed --filter=@marketpilot/database",
+    "db:migrate": "npx turbo run db:migrate --filter=@marketpilot/database",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "clean": "npx turbo run clean && rm -rf node_modules"
+  },
+  "packageManager": "pnpm@10.32.1",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@marketpilot/config",
+  "version": "0.0.0",
+  "private": true,
+  "files": ["tailwind.config.ts", "tsconfig.*.json"],
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}

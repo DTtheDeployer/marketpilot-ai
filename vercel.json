@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": "npx pnpm install",
+  "buildCommand": "cd ../.. && npx pnpm --filter @marketpilot/web build",
+  "ignoreCommand": "git diff HEAD^ HEAD --quiet -- . ../../packages/",
+  "outputDirectory": ".next",
+  "root": "apps/web"
+}
