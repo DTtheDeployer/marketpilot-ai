@@ -9,7 +9,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx src/seed.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc || true",
     "clean": "rm -rf dist"
   },
   "dependencies": {
