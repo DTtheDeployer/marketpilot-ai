@@ -42,6 +42,15 @@ const categoryLabels: Record<string, string> = {
   WEATHER_ARB: "Weather Arbitrage",
 };
 
+const strategyLinks: Record<string, string> = {
+  "spread-capture": "/strategies/spread-capture",
+  "mean-reversion": "/strategies/mean-reversion",
+  "orderbook-imbalance": "/strategies/orderbook-imbalance",
+  "momentum-unusual-activity": "#",
+  "time-decay-repricing": "/strategies/time-decay",
+  "cross-market-divergence": "/strategies/cross-market",
+};
+
 export default function StrategiesPage() {
   return (
     <div className="min-h-screen">
@@ -140,9 +149,11 @@ export default function StrategiesPage() {
               const risk = riskLabels[strategy.riskLevel] ?? riskLabels[3];
               const tier = tierLabels[strategy.minTier] ?? tierLabels.FREE;
               const category = categoryLabels[strategy.category] ?? strategy.category;
+              const href = strategyLinks[strategy.slug] ?? "#";
+              const hasPage = href !== "#";
 
-              return (
-                <Card key={strategy.id} className="flex flex-col">
+              const cardContent = (
+                <Card className={`flex flex-col ${hasPage ? "hover:border-brand-500/40 transition-colors" : ""}`}>
                   <CardHeader>
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-xs font-mono text-surface-600 uppercase tracking-wider">
@@ -177,8 +188,30 @@ export default function StrategiesPage() {
                         </span>
                       ))}
                     </div>
+                    {hasPage && (
+                      <div className="mt-4 pt-4 border-t border-surface-300">
+                        <span className="inline-flex items-center gap-1 text-sm font-medium text-brand-400 group-hover:text-brand-500 transition-colors">
+                          Learn More
+                          <ArrowRight className="h-4 w-4" />
+                        </span>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
+              );
+
+              if (hasPage) {
+                return (
+                  <Link key={strategy.id} href={href} className="block group">
+                    {cardContent}
+                  </Link>
+                );
+              }
+
+              return (
+                <div key={strategy.id}>
+                  {cardContent}
+                </div>
               );
             })}
           </div>
@@ -223,17 +256,31 @@ export default function StrategiesPage() {
               </Link>
             </div>
 
-            {/* Existing strategies */}
-            {demoStrategies.map((strategy) => (
-              <div key={strategy.id} className="border-b border-surface-300 pb-8 last:border-0 last:pb-0">
-                <h3 className="text-lg font-semibold text-surface-900">
-                  {strategy.name}
-                </h3>
-                <p className="mt-2 text-sm text-surface-700 leading-relaxed">
-                  {strategy.thesis}
-                </p>
-              </div>
-            ))}
+            {/* Existing strategies with links */}
+            {demoStrategies.map((strategy) => {
+              const href = strategyLinks[strategy.slug] ?? "#";
+              const hasPage = href !== "#";
+
+              return (
+                <div key={strategy.id} className="border-b border-surface-300 pb-8 last:border-0 last:pb-0">
+                  <h3 className="text-lg font-semibold text-surface-900">
+                    {strategy.name}
+                  </h3>
+                  <p className="mt-2 text-sm text-surface-700 leading-relaxed">
+                    {strategy.thesis}
+                  </p>
+                  {hasPage && (
+                    <Link
+                      href={href}
+                      className="inline-flex items-center gap-1 text-sm font-medium text-brand-400 hover:text-brand-500 mt-3 transition-colors"
+                    >
+                      Read full strategy breakdown
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
