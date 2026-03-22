@@ -1,19 +1,51 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/components/providers/auth-provider";
+import {
+  OrganizationSchema,
+  SoftwareApplicationSchema,
+} from "@/components/shared/json-ld";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MarketPilot AI — Prediction Market Strategy Automation",
+  metadataBase: new URL("https://marketpilot-six.vercel.app"),
+  title: {
+    default: "MarketPilot AI — Prediction Market Strategy Automation",
+    template: "%s | MarketPilot AI",
+  },
   description:
-    "Research, simulate, and deploy automated prediction-market strategies with institutional-grade risk controls.",
+    "Research, simulate, and deploy automated prediction-market strategies with institutional-grade risk controls. Paper trading, backtesting, and live execution.",
   keywords: [
     "prediction markets",
     "polymarket",
-    "trading automation",
-    "strategy",
+    "trading bot",
+    "automated trading",
     "paper trading",
-    "analytics",
   ],
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "/",
+    siteName: "MarketPilot AI",
+    title: "MarketPilot AI — Prediction Market Strategy Automation",
+    description:
+      "Research, simulate, and deploy automated prediction-market strategies with institutional-grade risk controls.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "MarketPilot AI" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    creator: "@marketpilotai",
+    title: "MarketPilot AI — Prediction Market Strategy Automation",
+    description:
+      "Research, simulate, and deploy automated prediction-market strategies with institutional-grade risk controls.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default function RootLayout({
@@ -40,6 +72,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen font-sans">
+        <a href="#main-content" className="skip-link">Skip to main content</a>
+        <OrganizationSchema />
+        <SoftwareApplicationSchema />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

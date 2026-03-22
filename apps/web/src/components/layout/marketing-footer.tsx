@@ -17,8 +17,8 @@ const footerLinks = {
   ],
   Legal: [
     { href: "/risk-disclosure", label: "Risk Disclosure" },
-    { href: "#", label: "Terms of Service" },
-    { href: "#", label: "Privacy Policy" },
+    { href: "/terms", label: "Terms of Service" },
+    { href: "/privacy", label: "Privacy Policy" },
   ],
 };
 

@@ -1,0 +1,53 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#09090b"/>
+
+  <!-- Subtle grid pattern -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1a1a2e" stroke-width="0.5"/>
+    </pattern>
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+    <linearGradient id="fadeOut" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#09090b" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#09090b" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <rect width="1200" height="630" fill="url(#fadeOut)" opacity="0.5"/>
+
+  <!-- Bar chart visual -->
+  <rect x="800" y="320" width="40" height="120" rx="4" fill="#6366f1" opacity="0.4"/>
+  <rect x="860" y="260" width="40" height="180" rx="4" fill="#6366f1" opacity="0.55"/>
+  <rect x="920" y="200" width="40" height="240" rx="4" fill="#6366f1" opacity="0.7"/>
+  <rect x="980" y="160" width="40" height="280" rx="4" fill="#6366f1" opacity="0.85"/>
+  <rect x="1040" y="120" width="40" height="320" rx="4" fill="#6366f1"/>
+
+  <!-- Trend line -->
+  <polyline points="820,310 880,250 940,190 1000,150 1060,110" stroke="#818cf8" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Logo icon -->
+  <rect x="100" y="200" width="56" height="56" rx="12" fill="#6366f1"/>
+  <rect x="112" y="230" width="8" height="16" rx="2" fill="white"/>
+  <rect x="124" y="222" width="8" height="24" rx="2" fill="white"/>
+  <rect x="136" y="214" width="8" height="32" rx="2" fill="white"/>
+
+  <!-- Title -->
+  <text x="172" y="242" font-family="system-ui, -apple-system, sans-serif" font-size="42" font-weight="800" fill="white">MarketPilot</text>
+  <text x="478" y="242" font-family="system-ui, -apple-system, sans-serif" font-size="42" font-weight="800" fill="#818cf8"> AI</text>
+
+  <!-- Subtitle -->
+  <text x="100" y="310" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="400" fill="#a1a1aa">Automate Your Prediction Market Strategy</text>
+
+  <!-- Accent line -->
+  <rect x="100" y="340" width="120" height="3" rx="1.5" fill="url(#brandGrad)"/>
+
+  <!-- Tagline -->
+  <text x="100" y="390" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#71717a">Paper Trading  |  Backtesting  |  Live Execution</text>
+
+  <!-- URL -->
+  <text x="100" y="530" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#52525b">marketpilot-six.vercel.app</text>
+</svg>

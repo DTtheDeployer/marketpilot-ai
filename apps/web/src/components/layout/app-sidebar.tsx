@@ -77,6 +77,7 @@ export function AppSidebar({ open, onClose }: { open?: boolean; onClose?: () => 
 
       {/* Sidebar */}
       <aside
+        aria-label="Dashboard sidebar navigation"
         className={cn(
           "fixed left-0 top-0 bottom-0 w-64 bg-surface-50 border-r border-surface-300 flex flex-col z-50 transition-transform duration-200",
           // Desktop: always visible
@@ -241,7 +242,7 @@ export function AppSidebar({ open, onClose }: { open?: boolean; onClose?: () => 
       </aside>
 
       {/* Mobile bottom navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-surface-50/90 backdrop-blur-xl border-t border-surface-300 pb-[env(safe-area-inset-bottom)]">
+      <nav aria-label="Mobile navigation" className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-surface-50/90 backdrop-blur-xl border-t border-surface-300 pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-around h-14">
           {bottomNav.map((item) => {
             const active = pathname === item.href || pathname.startsWith(item.href + "/");

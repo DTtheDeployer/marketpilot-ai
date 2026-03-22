@@ -51,6 +51,7 @@ export function AppHeader({ onMenuToggle }: { onMenuToggle?: () => void }) {
           <input
             type="text"
             placeholder="Search markets, strategies, bots..."
+            aria-label="Search markets, strategies, and bots"
             className="w-full h-9 pl-9 pr-4 rounded-lg border border-surface-300 bg-surface-100 text-sm text-surface-900 placeholder:text-surface-600 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:shadow-lg focus:shadow-brand-500/5 transition-all duration-200"
           />
         </div>
@@ -89,6 +90,7 @@ export function AppHeader({ onMenuToggle }: { onMenuToggle?: () => void }) {
 
         <Link
           href="/app/alerts"
+          aria-label="View notifications"
           className="relative p-2 rounded-lg text-surface-700 hover:bg-surface-200 hover:text-surface-900 transition-all duration-200"
         >
           <Bell className="h-5 w-5" />

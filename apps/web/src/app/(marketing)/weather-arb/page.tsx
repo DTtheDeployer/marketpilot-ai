@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Weather Arbitrage",
+  alternates: { canonical: "/weather-arb" },
+};
 import {
   Button,
   Card,
