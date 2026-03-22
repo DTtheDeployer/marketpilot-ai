@@ -20,7 +20,11 @@ onboardingRouter.post("/jurisdiction", async (req, res, next) => {
     const userId = authReq.userId!;
     const { country } = jurisdictionSchema.parse(req.body);
 
-    const restrictedCountries = ["Cuba", "Iran", "North Korea", "Syria", "Russia"];
+    const restrictedCountries = [
+      "Cuba", "Iran", "North Korea", "Syria", "Russia",
+      "Belarus", "Myanmar", "Libya", "Somalia", "Sudan",
+      "South Sudan", "Yemen", "Zimbabwe", "Venezuela", "Nicaragua",
+    ];
     const status = restrictedCountries.includes(country) ? "RESTRICTED" : "ELIGIBLE";
 
     // Create a jurisdiction check record (not upsert — multiple checks allowed)
@@ -100,6 +104,9 @@ onboardingRouter.post("/complete", async (req, res, next) => {
       throw new AppError(404, "PROFILE_NOT_FOUND", "User profile not found");
     }
 
+    // Allow both ELIGIBLE and RESTRICTED users to complete onboarding.
+    // RESTRICTED users are limited to paper trading only — live trading
+    // is blocked at the bot creation / order execution layer.
     if (profile.jurisdictionStatus === "UNCHECKED") {
       throw new AppError(400, "JURISDICTION_REQUIRED", "Jurisdiction check must be completed first");
     }
@@ -112,7 +119,7 @@ onboardingRouter.post("/complete", async (req, res, next) => {
       },
     });
 
-    logger.info(`Onboarding complete: user=${userId}`);
+    logger.info(`Onboarding complete: user=${userId} jurisdiction=${profile.jurisdictionStatus}`);
 
     res.json({
       success: true,

@@ -34,6 +34,7 @@ function SignupForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [referralValid, setReferralValid] = useState(false);
 
@@ -54,9 +55,22 @@ function SignupForm() {
     }
   }, [searchParams]);
 
+  const validatePassword = () => {
+    if (password.length > 0 && password.length < 8) {
+      setPasswordError("Password must be at least 8 characters");
+    } else {
+      setPasswordError(null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (password.length < 8) {
+      setPasswordError("Password must be at least 8 characters");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
@@ -123,8 +137,7 @@ function SignupForm() {
             id="name"
             label="Full Name"
             type="text"
-            placeholder="Your name"
-            required
+            placeholder="Your name (optional)"
             autoComplete="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -139,16 +152,26 @@ function SignupForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <Input
-            id="password"
-            label="Password"
-            type="password"
-            placeholder="Create a strong password"
-            required
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div>
+            <Input
+              id="password"
+              label="Password"
+              type="password"
+              placeholder="Create a strong password"
+              required
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (passwordError) setPasswordError(null);
+              }}
+              onBlur={validatePassword}
+            />
+            <p className="mt-1 text-xs text-surface-600">Minimum 8 characters</p>
+            {passwordError && (
+              <p className="mt-1 text-xs text-red-400">{passwordError}</p>
+            )}
+          </div>
           <Input
             id="confirm-password"
             label="Confirm Password"

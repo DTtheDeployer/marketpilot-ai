@@ -53,6 +53,39 @@ const countries = [
   "Switzerland",
   "Sweden",
   "Norway",
+  "Cuba",
+  "Iran",
+  "North Korea",
+  "Syria",
+  "Russia",
+  "Belarus",
+  "Myanmar",
+  "Libya",
+  "Somalia",
+  "Sudan",
+  "South Sudan",
+  "Yemen",
+  "Zimbabwe",
+  "Venezuela",
+  "Nicaragua",
+];
+
+const restrictedCountries = [
+  "Cuba",
+  "Iran",
+  "North Korea",
+  "Syria",
+  "Russia",
+  "Belarus",
+  "Myanmar",
+  "Libya",
+  "Somalia",
+  "Sudan",
+  "South Sudan",
+  "Yemen",
+  "Zimbabwe",
+  "Venezuela",
+  "Nicaragua",
 ];
 
 interface StrategyItem {
@@ -74,6 +107,9 @@ export default function OnboardingPage() {
   const [selectedStrategy, setSelectedStrategy] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const isRestricted = restrictedCountries.includes(selectedCountry);
 
   const fetchStrategies = useCallback(() => api.getStrategies(), []);
   const { data: strategiesRaw, loading: strategiesLoading } = useApi<unknown[]>(
@@ -129,30 +165,70 @@ export default function OnboardingPage() {
   const handleLaunch = async () => {
     setSaving(true);
     setError(null);
+    setSuccessMessage(null);
+
+    const strategy = strategies.find((s) => s.id === selectedStrategy);
+    if (!strategy) {
+      setError("No strategy selected");
+      setSaving(false);
+      return;
+    }
+
+    let botCreated = false;
+
     try {
-      const strategy = strategies.find((s) => s.id === selectedStrategy);
-      if (!strategy) return;
+      // Step 1: Create the demo bot
+      try {
+        await api.createBot({
+          name: `${strategy.name} Demo Bot`,
+          strategySlug: strategy.slug,
+          mode: "PAPER",
+          config: {},
+          riskLimits: { dailyLossLimit: 200, maxPositionSize: 100 },
+          riskPreset: "BALANCED",
+          capitalAllocated: 1000,
+        });
+        botCreated = true;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        setError(`Failed to create bot: ${message}`);
+        setSaving(false);
+        return;
+      }
 
-      // Create the demo bot
-      await api.createBot({
-        name: `${strategy.name} Demo Bot`,
-        strategySlug: strategy.slug,
-        mode: "PAPER",
-        config: {},
-        riskLimits: { dailyLossLimit: 200, maxPositionSize: 100 },
-        riskPreset: "BALANCED",
-        capitalAllocated: 1000,
-      });
+      // Step 2: Mark onboarding complete
+      try {
+        await api.post("/api/onboarding/complete");
+      } catch (err) {
+        // Bot was created but onboarding status failed to update.
+        // Still redirect — the bot exists, onboarding status is secondary.
+        console.warn("Onboarding complete call failed, but bot was created. Redirecting.", err);
+      }
 
-      // Mark onboarding complete
-      await api.post("/api/onboarding/complete");
+      // Step 3: Refresh user so the rest of the app sees the updated profile
+      try {
+        await refreshUser();
+      } catch (err) {
+        // Still redirect — the page will re-initialize
+        console.warn("Failed to refresh user after onboarding. Redirecting.", err);
+      }
 
-      // Refresh user so the rest of the app sees the updated profile
-      await refreshUser();
-
-      router.push("/app/dashboard");
+      // Success — show message briefly then redirect
+      setSuccessMessage("Bot created successfully! Redirecting to dashboard...");
+      setTimeout(() => {
+        router.push("/app/dashboard");
+      }, 800);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to launch bot");
+      // Unexpected error in the overall flow
+      if (botCreated) {
+        // Bot exists, try to redirect anyway
+        setSuccessMessage("Bot was created. Redirecting...");
+        setTimeout(() => {
+          router.push("/app/dashboard");
+        }, 800);
+      } else {
+        setError(err instanceof Error ? err.message : "Failed to launch bot");
+      }
     } finally {
       setSaving(false);
     }
@@ -214,6 +290,12 @@ export default function OnboardingPage() {
       {error && (
         <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
           {error}
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-sm text-green-400">
+          {successMessage}
         </div>
       )}
 
@@ -292,17 +374,31 @@ export default function OnboardingPage() {
                 ))}
               </select>
 
-              {selectedCountry && (
+              {selectedCountry && isRestricted && (
+                <div className="p-4 rounded-lg bg-red-500/5 border border-red-500/20">
+                  <div className="flex items-center gap-2 mb-1">
+                    <AlertTriangle className="h-4 w-4 text-red-400" />
+                    <p className="text-sm font-medium text-red-400">
+                      Restricted Region — Paper trading only
+                    </p>
+                  </div>
+                  <p className="text-xs text-surface-700">
+                    Live trading is not available in {selectedCountry}. You can
+                    still use paper trading to explore the platform.
+                  </p>
+                </div>
+              )}
+
+              {selectedCountry && !isRestricted && (
                 <div className="p-4 rounded-lg bg-green-500/5 border border-green-500/20">
                   <div className="flex items-center gap-2 mb-1">
                     <Check className="h-4 w-4 text-green-400" />
                     <p className="text-sm font-medium text-green-400">
-                      Eligible Jurisdiction
+                      Eligible — Paper and live trading available in {selectedCountry}.
                     </p>
                   </div>
                   <p className="text-xs text-surface-700">
-                    Paper trading is available in {selectedCountry}. Live trading
-                    eligibility will be confirmed after plan upgrade.
+                    You have full access to both paper and live trading features.
                   </p>
                 </div>
               )}
@@ -502,7 +598,7 @@ export default function OnboardingPage() {
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-surface-200/50 border border-surface-300">
                 <span className="text-sm text-surface-700">Risk Preset</span>
-                <span className="text-sm font-medium text-surface-900">Moderate</span>
+                <span className="text-sm font-medium text-surface-900">Balanced</span>
               </div>
             </div>
           </CardContent>

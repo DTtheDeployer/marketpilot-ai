@@ -83,21 +83,6 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 text-sm text-surface-700">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-surface-400 bg-surface-100 text-brand-600 focus:ring-brand-500"
-              />
-              Remember me
-            </label>
-            <Link
-              href="#"
-              className="text-sm text-brand-400 hover:text-brand-500"
-            >
-              Forgot password?
-            </Link>
-          </div>
           <Button
             type="submit"
             size="lg"
@@ -108,7 +93,12 @@ export default function LoginPage() {
             <LogIn className="h-4 w-4" />
           </Button>
         </form>
-        <div className="mt-6 text-center">
+        <div className="mt-4 text-center">
+          <p className="text-xs text-surface-600">
+            Need help? Contact support@marketpilot.ai
+          </p>
+        </div>
+        <div className="mt-4 text-center">
           <p className="text-sm text-surface-700">
             Don&apos;t have an account?{" "}
             <Link
