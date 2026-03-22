@@ -24,6 +24,7 @@ import {
   Activity,
   Loader2,
   AlertCircle,
+  Trash2,
 } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { useApi } from "@/hooks/use-api";
@@ -69,6 +70,16 @@ export default function BotsPage() {
       await refetch();
     } catch {
       // Error is visible via the bot status on next poll
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this bot? This cannot be undone. All trade history for this bot will be preserved.")) return;
+    try {
+      await api.deleteBot(id);
+      await refetch();
+    } catch {
+      // Silent — refetch will show current state
     }
   };
 
@@ -232,13 +243,12 @@ export default function BotsPage() {
                         Resume
                       </Button>
                       <Button
-                        variant="danger"
+                        variant="outline"
                         size="sm"
-                        className="flex-1 gap-1.5"
-                        onClick={() => handleStop(bot.id)}
+                        className="gap-1.5"
+                        onClick={() => handleDelete(bot.id)}
                       >
-                        <Square className="h-3.5 w-3.5" />
-                        Stop
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </>
                   )}
