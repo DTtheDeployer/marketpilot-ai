@@ -510,10 +510,72 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Capital Scale Table */}
+          <div className="mt-16">
+            <h3 className="text-xl font-bold text-white mb-2">Returns Scale With Capital</h3>
+            <p className="text-sm text-surface-600 mb-8">Moderate scenario — 50-100% monthly return range</p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-surface-300">
+                    <th className="pb-3 pr-6 text-left font-mono text-surface-600">Starting Capital</th>
+                    <th className="pb-3 pr-6 text-left font-mono text-surface-600">Monthly Low</th>
+                    <th className="pb-3 pr-6 text-left font-mono text-surface-600">Monthly High</th>
+                    <th className="pb-3 pr-6 text-left font-mono text-surface-600">Trades/Day</th>
+                    <th className="pb-3 text-left font-mono text-surface-600">Max Position</th>
+                  </tr>
+                </thead>
+                <tbody className="font-mono">
+                  {[
+                    { capital: "$50", low: "$25", high: "$50", trades: "3-5", pos: "$1.00" },
+                    { capital: "$100", low: "$50", high: "$100", trades: "5-8", pos: "$2.00" },
+                    { capital: "$250", low: "$125", high: "$250", trades: "5-8", pos: "$5.00" },
+                    { capital: "$500", low: "$250", high: "$500", trades: "5-8", pos: "$10.00" },
+                    { capital: "$1,000", low: "$500", high: "$1,000", trades: "5-8", pos: "$20.00" },
+                    { capital: "$5,000", low: "$2,500", high: "$5,000", trades: "5-8", pos: "$100.00" },
+                  ].map((row, i) => (
+                    <tr key={i} className="border-b border-surface-300/50 hover:bg-surface-200/30 transition-colors">
+                      <td className="py-3 pr-6 text-white font-medium">{row.capital}</td>
+                      <td className="py-3 pr-6 text-green-400">+{row.low}</td>
+                      <td className="py-3 pr-6 text-green-400">+{row.high}</td>
+                      <td className="py-3 pr-6 text-surface-800">{row.trades}</td>
+                      <td className="py-3 text-surface-800">{row.pos}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Visual bar chart */}
+            <div className="mt-8 space-y-3">
+              {[
+                { label: "$50", width: "5%", value: "+$25-50" },
+                { label: "$100", width: "10%", value: "+$50-100" },
+                { label: "$250", width: "25%", value: "+$125-250" },
+                { label: "$500", width: "50%", value: "+$250-500" },
+                { label: "$1K", width: "75%", value: "+$500-1K" },
+                { label: "$5K", width: "100%", value: "+$2.5K-5K" },
+              ].map((bar) => (
+                <div key={bar.label} className="flex items-center gap-4">
+                  <span className="text-xs font-mono text-surface-600 w-10 text-right">{bar.label}</span>
+                  <div className="flex-1 h-6 bg-surface-300/50 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-brand-600 to-brand-400 flex items-center justify-end pr-2"
+                      style={{ width: bar.width }}
+                    >
+                      <span className="text-[10px] font-mono text-white font-medium whitespace-nowrap">
+                        {bar.value}/mo
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <p className="mt-8 text-xs text-surface-600 text-center max-w-2xl mx-auto">
-            Projections based on backtest data. Actual results will vary. Past
-            performance does not guarantee future returns. Trading prediction
-            markets involves significant risk.
+            Projections based on backtest data using the moderate risk profile. Actual results will vary.
+            Past performance does not guarantee future returns. Trading prediction markets involves
+            significant risk. Position sizes are automatically scaled by Kelly criterion.
           </p>
         </div>
       </section>
