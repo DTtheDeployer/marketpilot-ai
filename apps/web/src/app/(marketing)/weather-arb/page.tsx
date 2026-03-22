@@ -24,6 +24,7 @@ import {
   ChevronDown,
   TrendingUp,
   Bot,
+  Check,
 } from "lucide-react";
 
 const executionSteps = [
@@ -39,7 +40,7 @@ const executionSteps = [
     icon: GitCompare,
     title: "Match",
     description:
-      "Each market is matched to its corresponding NOAA forecast product — temperature, precipitation, or storm probability.",
+      "Each market is matched to its corresponding NOAA forecast product \u2014 temperature, precipitation, or storm probability.",
   },
   {
     step: "03",
@@ -67,7 +68,7 @@ const executionSteps = [
     icon: LogOut,
     title: "Exit",
     description:
-      "Positions are held to resolution (binary outcome). No active exit management needed — the market resolves YES or NO.",
+      "Positions are held to resolution (binary outcome). No active exit management needed \u2014 the market resolves YES or NO.",
   },
 ];
 
@@ -96,7 +97,7 @@ const faqItems = [
   {
     question: "Why doesn't the market already price in NOAA data?",
     answer:
-      "Most Polymarket weather markets have low liquidity and are dominated by retail traders who don't consult NOAA probabilistic forecasts. The data is publicly available but requires programmatic access and statistical interpretation. The inefficiency persists because there aren't enough sophisticated participants to arbitrage it away — yet.",
+      "Most Polymarket weather markets have low liquidity and are dominated by retail traders who don't consult NOAA probabilistic forecasts. The data is publicly available but requires programmatic access and statistical interpretation. The inefficiency persists because there aren't enough sophisticated participants to arbitrage it away \u2014 yet.",
   },
   {
     question: "What happens if NOAA is wrong?",
@@ -135,7 +136,7 @@ export default function WeatherArbPage() {
               NOAA publishes probabilistic weather forecasts with 85-95% historical
               accuracy. Polymarket weather contracts are priced by retail traders
               using gut instinct. The gap between science and sentiment is the
-              edge — and it&apos;s enormous.
+              edge &mdash; and it&apos;s enormous.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <Link href="/signup">
@@ -151,6 +152,350 @@ export default function WeatherArbPage() {
               </Link>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── One Trade, Explained — Visual Walkthrough ────────────────── */}
+      <section className="border-y border-surface-300 bg-surface-50 py-20 sm:py-28">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-surface-900 mb-4">
+            One Trade, Explained
+          </h2>
+          <p className="text-lg text-surface-700 mb-16 max-w-2xl">
+            From data to dollars in four steps. Here&apos;s exactly how the bot turns a NOAA forecast into profit.
+          </p>
+
+          {/* Desktop: horizontal flow */}
+          <div className="hidden lg:grid grid-cols-4 gap-0 items-start">
+            {/* Card 1 — SCAN */}
+            <div className="flex flex-col items-center">
+              <div className="bg-surface-100 border border-surface-300 w-full p-6">
+                <p className="text-xs font-mono text-surface-600 uppercase tracking-wider mb-4">
+                  01 &mdash; SCAN
+                </p>
+                <div className="text-3xl mb-3">&#127777;</div>
+                <p className="text-sm font-bold text-surface-900 font-mono mb-1">
+                  NOAA API
+                </p>
+                <div className="mt-4 space-y-2 font-mono text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-surface-600">City</span>
+                    <span className="text-surface-900">NYC Saturday</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-surface-600">High</span>
+                    <span className="text-surface-900">75&deg;F</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-surface-600">Conf</span>
+                    <span className="text-brand-400 font-bold">94%</span>
+                  </div>
+                </div>
+              </div>
+              <div className="w-px h-8 bg-surface-300" />
+              <div className="text-surface-600">&darr;</div>
+            </div>
+
+            {/* Card 2 — DETECT */}
+            <div className="flex flex-col items-center">
+              <div className="bg-surface-100 border border-surface-300 w-full p-6">
+                <p className="text-xs font-mono text-surface-600 uppercase tracking-wider mb-4">
+                  02 &mdash; DETECT
+                </p>
+                <div className="text-3xl mb-3">&#128202;</div>
+                <p className="text-sm font-bold text-surface-900 font-mono mb-1">
+                  Polymarket
+                </p>
+                <div className="mt-4 space-y-2 font-mono text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-surface-600">Market</span>
+                    <span className="text-surface-900">NYC 74-76&deg;F</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-surface-600">Price</span>
+                    <span className="text-surface-900">11&cent;</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-surface-600">Implied</span>
+                    <span className="text-red-400 font-bold">11%</span>
+                  </div>
+                </div>
+              </div>
+              <div className="w-px h-8 bg-surface-300" />
+              <div className="text-surface-600">&darr;</div>
+            </div>
+
+            {/* Card 3 — TRADE */}
+            <div className="flex flex-col items-center">
+              <div className="bg-surface-100 border border-surface-300 border-brand-500/30 w-full p-6">
+                <p className="text-xs font-mono text-brand-400 uppercase tracking-wider mb-4">
+                  03 &mdash; TRADE
+                </p>
+                <div className="text-3xl mb-3">&#9889;</div>
+                <p className="text-sm font-bold text-brand-400 font-mono mb-1">
+                  Bot Executes
+                </p>
+                <div className="mt-4 space-y-2 font-mono text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-surface-600">Action</span>
+                    <span className="text-brand-400 font-bold">BUY 18 shares</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-surface-600">Cost</span>
+                    <span className="text-surface-900">$2.00</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-surface-600">EV</span>
+                    <span className="text-green-400 font-bold">+$0.83/share</span>
+                  </div>
+                </div>
+              </div>
+              <div className="w-px h-8 bg-surface-300" />
+              <div className="text-surface-600">&darr;</div>
+            </div>
+
+            {/* Card 4 — PROFIT */}
+            <div className="flex flex-col items-center">
+              <div className="bg-surface-100 border border-surface-300 border-green-500/30 w-full p-6">
+                <p className="text-xs font-mono text-green-400 uppercase tracking-wider mb-4">
+                  04 &mdash; PROFIT
+                </p>
+                <div className="text-3xl mb-3">&#9989;</div>
+                <p className="text-sm font-bold text-green-400 font-mono mb-1">
+                  Resolved YES
+                </p>
+                <div className="mt-4 space-y-2 font-mono text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-surface-600">Payout</span>
+                    <span className="text-surface-900">$18.00</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-surface-600">Cost</span>
+                    <span className="text-surface-900">$2.00</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-surface-600">Profit</span>
+                    <span className="text-green-400 font-bold">+$16.00</span>
+                  </div>
+                  <div className="flex justify-between border-t border-surface-300 pt-2">
+                    <span className="text-surface-600">ROI</span>
+                    <span className="text-green-400 font-bold text-lg">+800%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile: vertical stack */}
+          <div className="lg:hidden space-y-4">
+            {[
+              {
+                step: "01", label: "SCAN", source: "NOAA API",
+                color: "text-surface-600", borderColor: "",
+                rows: [
+                  ["City", "NYC Saturday", "text-surface-900"],
+                  ["High", "75\u00B0F", "text-surface-900"],
+                  ["Conf", "94%", "text-brand-400 font-bold"],
+                ],
+              },
+              {
+                step: "02", label: "DETECT", source: "Polymarket",
+                color: "text-surface-600", borderColor: "",
+                rows: [
+                  ["Market", "NYC 74-76\u00B0F", "text-surface-900"],
+                  ["Price", "11\u00A2", "text-surface-900"],
+                  ["Implied", "11%", "text-red-400 font-bold"],
+                ],
+              },
+              {
+                step: "03", label: "TRADE", source: "Bot Executes",
+                color: "text-brand-400", borderColor: "border-brand-500/30",
+                rows: [
+                  ["Action", "BUY 18 shares", "text-brand-400 font-bold"],
+                  ["Cost", "$2.00", "text-surface-900"],
+                  ["EV", "+$0.83/share", "text-green-400 font-bold"],
+                ],
+              },
+              {
+                step: "04", label: "PROFIT", source: "Resolved YES",
+                color: "text-green-400", borderColor: "border-green-500/30",
+                rows: [
+                  ["Payout", "$18.00", "text-surface-900"],
+                  ["Cost", "$2.00", "text-surface-900"],
+                  ["Profit", "+$16.00", "text-green-400 font-bold"],
+                  ["ROI", "+800%", "text-green-400 font-bold"],
+                ],
+              },
+            ].map((card) => (
+              <div
+                key={card.step}
+                className={`bg-surface-100 border border-surface-300 ${card.borderColor} p-6`}
+              >
+                <p className={`text-xs font-mono ${card.color} uppercase tracking-wider mb-3`}>
+                  {card.step} &mdash; {card.label}
+                </p>
+                <p className={`text-sm font-bold ${card.color} font-mono`}>
+                  {card.source}
+                </p>
+                <div className="mt-3 space-y-2 font-mono text-sm">
+                  {card.rows.map(([label, value, cls]) => (
+                    <div key={label} className="flex justify-between">
+                      <span className="text-surface-600">{label}</span>
+                      <span className={cls}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── What's Possible — Scenario Cards ─────────────────────────── */}
+      <section className="py-20 sm:py-28">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-surface-900 mb-4">
+            What&apos;s Possible
+          </h2>
+          <p className="text-lg text-surface-700 mb-16 max-w-2xl">
+            Three risk profiles, one strategy. Choose how aggressively the bot trades.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+            {/* Conservative */}
+            <div className="bg-surface-100 border border-surface-300 p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-3 h-3 rounded-full bg-blue-400" />
+                <p className="text-sm font-bold text-surface-900 uppercase tracking-wider">
+                  Conservative
+                </p>
+              </div>
+              <div className="mb-6">
+                <p className="text-sm font-mono text-surface-600 mb-1">
+                  Starting with $100
+                </p>
+                <p className="text-4xl font-bold text-surface-900 font-mono">
+                  $115<span className="text-2xl text-surface-600">&ndash;</span>$130
+                </p>
+              </div>
+              <div className="mb-6">
+                <div className="flex justify-between text-xs font-mono text-surface-600 mb-2">
+                  <span>Return</span>
+                  <span className="text-blue-400">+15&ndash;30%/mo</span>
+                </div>
+                <div className="w-full h-3 bg-surface-300 overflow-hidden">
+                  <div className="h-full bg-blue-400" style={{ width: "30%" }} />
+                </div>
+              </div>
+              <div className="space-y-3 text-sm font-mono">
+                <div className="flex justify-between">
+                  <span className="text-surface-600">Trades/day</span>
+                  <span className="text-surface-900">2&ndash;3</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-surface-600">Filter</span>
+                  <span className="text-surface-900">High confidence only</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-surface-600">Loss limit</span>
+                  <span className="text-surface-900">$50/day</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Moderate — POPULAR */}
+            <div className="bg-surface-100 border-2 border-brand-500 p-8 relative">
+              <div className="absolute -top-3 right-6">
+                <span className="bg-brand-500 text-white text-xs font-bold font-mono px-3 py-1 uppercase tracking-wider">
+                  Popular
+                </span>
+              </div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-3 h-3 rounded-full bg-brand-400" />
+                <p className="text-sm font-bold text-surface-900 uppercase tracking-wider">
+                  Moderate
+                </p>
+              </div>
+              <div className="mb-6">
+                <p className="text-sm font-mono text-surface-600 mb-1">
+                  Starting with $100
+                </p>
+                <p className="text-4xl font-bold text-surface-900 font-mono">
+                  $150<span className="text-2xl text-surface-600">&ndash;</span>$200
+                </p>
+              </div>
+              <div className="mb-6">
+                <div className="flex justify-between text-xs font-mono text-surface-600 mb-2">
+                  <span>Return</span>
+                  <span className="text-brand-400">+50&ndash;100%/mo</span>
+                </div>
+                <div className="w-full h-3 bg-surface-300 overflow-hidden">
+                  <div className="h-full bg-brand-500" style={{ width: "60%" }} />
+                </div>
+              </div>
+              <div className="space-y-3 text-sm font-mono">
+                <div className="flex justify-between">
+                  <span className="text-surface-600">Trades/day</span>
+                  <span className="text-surface-900">5&ndash;8</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-surface-600">Filter</span>
+                  <span className="text-surface-900">Balanced risk</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-surface-600">Loss limit</span>
+                  <span className="text-surface-900">$50/day</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Aggressive */}
+            <div className="bg-surface-100 border border-surface-300 p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-3 h-3 rounded-full bg-amber-400" />
+                <p className="text-sm font-bold text-surface-900 uppercase tracking-wider">
+                  Aggressive
+                </p>
+              </div>
+              <div className="mb-6">
+                <p className="text-sm font-mono text-surface-600 mb-1">
+                  Starting with $100
+                </p>
+                <p className="text-4xl font-bold text-surface-900 font-mono">
+                  $200<span className="text-2xl text-surface-600">&ndash;</span>$400
+                </p>
+              </div>
+              <div className="mb-6">
+                <div className="flex justify-between text-xs font-mono text-surface-600 mb-2">
+                  <span>Return</span>
+                  <span className="text-amber-400">+200%+/mo</span>
+                </div>
+                <div className="w-full h-3 bg-surface-300 overflow-hidden">
+                  <div className="h-full bg-amber-400" style={{ width: "90%" }} />
+                </div>
+              </div>
+              <div className="space-y-3 text-sm font-mono">
+                <div className="flex justify-between">
+                  <span className="text-surface-600">Trades/day</span>
+                  <span className="text-surface-900">10+</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-surface-600">Filter</span>
+                  <span className="text-surface-900">Higher risk tolerance</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-surface-600">Loss limit</span>
+                  <span className="text-surface-900">$100/day</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p className="mt-8 text-xs text-surface-600 text-center max-w-2xl mx-auto">
+            Projections based on backtest data. Actual results will vary. Past
+            performance does not guarantee future returns. Trading prediction
+            markets involves significant risk.
+          </p>
         </div>
       </section>
 
@@ -616,7 +961,7 @@ export default function WeatherArbPage() {
           </h2>
           <p className="mt-4 text-lg text-surface-700">
             Prove the edge with zero risk. Watch the bot identify and trade
-            weather mispricings in real time — with simulated capital.
+            weather mispricings in real time &mdash; with simulated capital.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/signup">
@@ -646,7 +991,7 @@ export default function WeatherArbPage() {
               whether simulated or live, does not guarantee future results.
               Backtest results reflect hypothetical performance and have inherent
               limitations. You should not trade with funds you cannot afford to
-              lose. MarketPilot provides tools and automation — it does not
+              lose. MarketPilot provides tools and automation &mdash; it does not
               provide financial advice.
             </p>
           </div>
