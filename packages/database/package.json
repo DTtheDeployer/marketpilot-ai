@@ -5,11 +5,11 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "db:generate": "prisma generate",
+    "db:generate": "npx prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx src/seed.ts",
-    "build": "prisma generate && tsc || true",
+    "build": "npx prisma generate || true",
     "clean": "rm -rf dist"
   },
   "dependencies": {
