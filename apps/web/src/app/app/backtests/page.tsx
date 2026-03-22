@@ -39,6 +39,7 @@ export default function BacktestsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedStrategy, setSelectedStrategy] = useState("");
   const [startDate, setStartDate] = useState("2025-01-01");
   const [endDate, setEndDate] = useState("2025-03-20");
@@ -292,6 +293,63 @@ export default function BacktestsPage() {
                         <p className="text-xs text-surface-600 mt-1">Profit Factor</p>
                       </div>
                     </div>
+
+                    {/* View Details button */}
+                    <div className="mt-4 flex items-center justify-between">
+                      <div className="text-xs text-surface-600">
+                        Avg Win: <span className="text-green-400 font-mono">${Number(all.avgWin ?? 0).toFixed(2)}</span>
+                        {" · "}Avg Loss: <span className="text-red-400 font-mono">${Number(all.avgLoss ?? 0).toFixed(2)}</span>
+                        {" · "}Max Consecutive Losses: <span className="font-mono text-surface-800">{all.maxConsecutiveLosses ?? "—"}</span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setExpandedId(expandedId === bt.id ? null : bt.id)}
+                      >
+                        {expandedId === bt.id ? "Hide Trades" : "View Trades"}
+                      </Button>
+                    </div>
+
+                    {/* Trade log table */}
+                    {expandedId === bt.id && results.tradeLog && (
+                      <div className="mt-4 border-t border-surface-300 pt-4">
+                        <p className="text-sm font-medium text-surface-900 mb-3">
+                          Trade Log ({results.tradeLog.length} of {trades} trades)
+                        </p>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs font-mono">
+                            <thead>
+                              <tr className="border-b border-surface-300">
+                                <th className="pb-2 pr-4 text-left text-surface-600">Date</th>
+                                <th className="pb-2 pr-4 text-left text-surface-600">Market</th>
+                                <th className="pb-2 pr-4 text-right text-surface-600">Entry</th>
+                                <th className="pb-2 pr-4 text-right text-surface-600">Exit</th>
+                                <th className="pb-2 pr-4 text-right text-surface-600">P&L</th>
+                                <th className="pb-2 text-right text-surface-600">Result</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {(results.tradeLog as any[]).map((trade: any, i: number) => (
+                                <tr key={i} className="border-b border-surface-300/30 hover:bg-surface-200/30">
+                                  <td className="py-2 pr-4 text-surface-700">{trade.date}</td>
+                                  <td className="py-2 pr-4 text-surface-800">{trade.market}</td>
+                                  <td className="py-2 pr-4 text-right text-surface-800">{trade.entry}¢</td>
+                                  <td className="py-2 pr-4 text-right text-surface-800">{trade.exit}¢</td>
+                                  <td className={`py-2 pr-4 text-right font-medium ${trade.pnl >= 0 ? "text-green-400" : "text-red-400"}`}>
+                                    {trade.pnl >= 0 ? "+" : ""}${trade.pnl}
+                                  </td>
+                                  <td className="py-2 text-right">
+                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${trade.result === "WIN" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>
+                                      {trade.result}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 )}
 
