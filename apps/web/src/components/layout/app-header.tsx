@@ -3,6 +3,7 @@
 import { Bell, Search, User, LogOut, Menu } from "lucide-react";
 import { Badge } from "@marketpilot/ui";
 import Link from "next/link";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api-client";
@@ -65,6 +66,14 @@ export function AppHeader({ onMenuToggle }: { onMenuToggle?: () => void }) {
         {planTier !== "FREE" && (
           <Badge variant="default">{planTier}</Badge>
         )}
+
+        <div className="hidden sm:block">
+          <ConnectButton
+            accountStatus="avatar"
+            chainStatus="icon"
+            showBalance={false}
+          />
+        </div>
 
         <Link
           href="/app/alerts"
