@@ -228,14 +228,17 @@ export default function BacktestsPage() {
           {list.map((bt: any) => {
             const status = statusConfig[bt.status] ?? statusConfig.QUEUED;
             const isCompleted = bt.status === "COMPLETED";
-            const metrics = bt.metrics || bt.results || {};
+            // Merge both results and metrics objects — API stores them separately
+            const results = bt.results || {};
+            const metrics = bt.metrics || {};
+            const all = { ...results, ...metrics };
             const strategyName = bt.strategy?.name || bt.strategyName || bt.strategySlug || "Strategy";
-            const totalPnl = metrics.totalPnl ?? bt.totalPnl ?? 0;
-            const winRate = metrics.winRate ?? bt.winRate ?? 0;
-            const sharpe = metrics.sharpeRatio ?? bt.sharpe ?? 0;
-            const maxDd = metrics.maxDrawdown ?? bt.maxDrawdown ?? 0;
-            const trades = metrics.totalTrades ?? bt.trades ?? bt.tradesCount ?? 0;
-            const profitFactor = metrics.profitFactor ?? bt.profitFactor ?? 0;
+            const totalPnl = all.totalPnl ?? bt.totalPnl ?? 0;
+            const winRate = all.winRate ?? bt.winRate ?? 0;
+            const sharpe = all.sharpeRatio ?? bt.sharpe ?? 0;
+            const maxDd = all.maxDrawdown ?? bt.maxDrawdown ?? 0;
+            const trades = all.totalTrades ?? bt.trades ?? bt.tradesCount ?? 0;
+            const profitFactor = all.profitFactor ?? bt.profitFactor ?? 0;
 
             return (
               <Card key={bt.id}>
