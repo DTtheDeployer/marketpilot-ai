@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useAccount } from "wagmi";
 import {
   Card,
   CardHeader,
@@ -175,6 +177,12 @@ export default function BrowserWalletPage() {
                   I have MetaMask installed
                 </span>
               </label>
+
+              {/* Actual wallet connect button */}
+              <div className="pt-4 border-t border-surface-300">
+                <p className="text-sm font-medium text-white mb-3">Connect your wallet now:</p>
+                <ConnectButton />
+              </div>
             </div>
           )}
 

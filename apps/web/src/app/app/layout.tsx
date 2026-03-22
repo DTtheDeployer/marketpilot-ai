@@ -4,11 +4,13 @@ import { useState } from "react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
+import { Web3Provider } from "@/components/providers/web3-provider";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
+    <Web3Provider>
     <div className="flex min-h-screen">
       <AppSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 md:ml-64">
@@ -18,5 +20,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
+    </Web3Provider>
   );
 }

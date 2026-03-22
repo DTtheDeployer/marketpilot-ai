@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useAccount } from "wagmi";
 import {
   Card,
   CardHeader,
@@ -167,9 +169,12 @@ export default function ConnectPage() {
               </ul>
             </div>
 
+            <div className="mt-2">
+              <ConnectButton />
+            </div>
             <Link href="/app/connect/browser-wallet">
-              <Button className="w-full mt-2" size="lg">
-                Connect Wallet
+              <Button variant="outline" className="w-full mt-3" size="sm">
+                Full Setup Guide
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
