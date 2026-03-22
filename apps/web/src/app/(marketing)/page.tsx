@@ -5,60 +5,51 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent,
-  Badge,
 } from "@marketpilot/ui";
-import {
-  ArrowRight,
-  Bot,
-  AlertTriangle,
-  ShieldCheck,
-  Eye,
-  FlaskConical,
-  ShieldAlert,
-  CloudSun,
-  ScanLine,
-  Clock,
-  TrendingUp,
-  Zap,
-  Lock,
-  DollarSign,
-  Layers,
-  Timer,
-  Activity,
-} from "lucide-react";
+import { ArrowRight, AlertTriangle } from "lucide-react";
 
 const performanceData = [
-  { strategy: "Weather Arb", roi: "+62.1%", trades: 214, winRate: "78%", status: "Live" },
-  { strategy: "Mean Reversion", roi: "+19.3%", trades: 1_031, winRate: "63%", status: "Live" },
-  { strategy: "Time Decay", roi: "+14.6%", trades: 387, winRate: "71%", status: "Live" },
-  { strategy: "Spread Capture", roi: "+11.8%", trades: 2_847, winRate: "58%", status: "Live" },
+  {
+    strategy: "Weather Arb",
+    return30d: "+62.1%",
+    winRate: "78%",
+    maxDrawdown: "-8.2%",
+  },
+  {
+    strategy: "Mean Reversion",
+    return30d: "+19.3%",
+    winRate: "63%",
+    maxDrawdown: "-12.1%",
+  },
+  {
+    strategy: "Spread Capture",
+    return30d: "+11.8%",
+    winRate: "58%",
+    maxDrawdown: "-6.4%",
+  },
+  {
+    strategy: "Time Decay",
+    return30d: "+14.6%",
+    winRate: "71%",
+    maxDrawdown: "-9.7%",
+  },
 ];
 
-const trustPoints = [
+const featureCards = [
   {
-    icon: Lock,
     title: "Non-Custodial",
     description:
-      "Your funds stay in your wallet. MarketPilot never holds your capital — we sign transactions, you approve them.",
+      "Your wallet, your funds, your control. MarketPilot never holds your capital.",
   },
   {
-    icon: Eye,
-    title: "Transparent Strategies",
-    description:
-      "Every strategy has a published thesis, documented parameters, and open performance history. No black boxes.",
-  },
-  {
-    icon: FlaskConical,
     title: "Paper First",
     description:
-      "Every strategy must prove itself in paper trading with real market data before you can deploy live capital.",
+      "Prove the edge before risking capital. Every strategy must pass paper trading first.",
   },
   {
-    icon: ShieldAlert,
-    title: "Risk Controls Built In",
+    title: "Risk Controls",
     description:
-      "Stop-losses, daily drawdown limits, Kelly sizing caps, and automatic circuit breakers protect every position.",
+      "Per-position stops, daily limits, circuit breakers. Protection is built in, not bolted on.",
   },
 ];
 
@@ -66,317 +57,310 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden py-32 sm:py-44">
-        {/* Background glow effects */}
-        <div className="absolute inset-0 bg-gradient-to-b from-brand-600/5 via-transparent to-transparent" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-brand-600/8 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute top-20 right-1/4 w-[400px] h-[400px] bg-purple-600/5 rounded-full blur-[100px] pointer-events-none" />
+      <section className="bg-surface-0 py-24 sm:py-32 lg:py-40">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            {/* Left — Copy */}
+            <div>
+              <p className="text-sm font-mono text-brand-400 tracking-wide uppercase mb-6">
+                14 of the top 20 Polymarket traders are bots.
+              </p>
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.05]">
+                You Should Be
+                <br />
+                One of Them.
+              </h1>
+              <p className="mt-8 text-lg text-surface-800 max-w-xl leading-relaxed">
+                Polymarket&apos;s best performers aren&apos;t clicking
+                buttons&nbsp;&mdash; they&apos;re running algorithms.
+                MarketPilot gives you transparent strategies, institutional risk
+                controls, and paper trading to prove it works before you risk a
+                dollar.
+              </p>
+              <div className="mt-10 flex flex-col sm:flex-row gap-4">
+                <Link href="/signup">
+                  <Button
+                    size="xl"
+                    className="bg-brand-600 text-white hover:bg-brand-500"
+                  >
+                    Start Paper Trading
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+                <Link href="/strategies">
+                  <Button
+                    variant="outline"
+                    size="xl"
+                    className="border-surface-400 text-white hover:bg-surface-100"
+                  >
+                    View Live Performance
+                  </Button>
+                </Link>
+              </div>
+            </div>
 
-        {/* Floating particle decorations */}
-        <div className="absolute top-32 left-[15%] w-1.5 h-1.5 rounded-full bg-brand-400/30 animate-pulse" />
-        <div className="absolute top-48 right-[20%] w-1 h-1 rounded-full bg-brand-400/20 animate-pulse" style={{ animationDelay: "1s" }} />
-        <div className="absolute bottom-32 left-[25%] w-2 h-2 rounded-full bg-brand-400/15 animate-pulse" style={{ animationDelay: "0.5s" }} />
-        <div className="absolute top-64 left-[10%] w-1 h-1 rounded-full bg-purple-400/20 animate-pulse" style={{ animationDelay: "1.5s" }} />
-        <div className="absolute bottom-48 right-[15%] w-1.5 h-1.5 rounded-full bg-purple-400/25 animate-pulse" style={{ animationDelay: "2s" }} />
-        <div className="absolute top-40 right-[35%] w-1 h-1 rounded-full bg-brand-300/20 animate-pulse" style={{ animationDelay: "0.7s" }} />
-
-        <div className="relative mx-auto max-w-7xl px-6 lg:px-8 text-center">
-          <Badge variant="warning" className="mb-8 text-sm px-4 py-1.5">
-            14 of the top 20 Polymarket traders are bots.
-          </Badge>
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight max-w-5xl mx-auto leading-[1.05]">
-            <span className="text-gradient-animated">You Should Be</span>
-            <br />
-            <span className="text-surface-900">One of Them.</span>
-          </h1>
-          <p className="mt-8 text-lg sm:text-xl lg:text-2xl text-surface-700 max-w-3xl mx-auto leading-relaxed">
-            Polymarket&apos;s best performers aren&apos;t clicking buttons — they&apos;re
-            running algorithms that exploit pricing gaps retail traders can&apos;t
-            see. MarketPilot gives you the same edge: transparent strategies,
-            institutional risk controls, and paper trading to prove it works
-            before you risk a dollar.
-          </p>
-          <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/signup">
-              <Button size="xl" className="relative group overflow-hidden">
-                <span className="relative z-10 flex items-center gap-2">
-                  Start Paper Trading — Free
-                  <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+            {/* Right — Dashboard Preview Card */}
+            <div className="bg-surface-100 border border-surface-300 p-8">
+              <div className="flex items-center justify-between mb-8">
+                <p className="text-xs font-mono text-surface-600 uppercase tracking-wider">
+                  Dashboard Preview
+                </p>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 pulse-dot" />
+                  <span className="text-xs font-mono text-green-400">LIVE</span>
                 </span>
-                <span className="absolute inset-0 bg-gradient-to-r from-brand-600 to-brand-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </Button>
-            </Link>
-            <Link href="/strategies">
-              <Button variant="outline" size="xl" className="backdrop-blur-sm">
-                See Live Bot Performance
-              </Button>
-            </Link>
+              </div>
+              <div className="grid grid-cols-3 gap-6">
+                <div>
+                  <p className="text-xs font-mono text-surface-600 uppercase tracking-wider mb-2">
+                    Total P&amp;L
+                  </p>
+                  <p className="text-3xl font-bold text-green-400 stat-value">
+                    +$142.50
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-mono text-surface-600 uppercase tracking-wider mb-2">
+                    Win Rate
+                  </p>
+                  <p className="text-3xl font-bold text-white stat-value">
+                    71%
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-mono text-surface-600 uppercase tracking-wider mb-2">
+                    Active Bots
+                  </p>
+                  <p className="text-3xl font-bold text-white stat-value">3</p>
+                </div>
+              </div>
+              <div className="mt-8 border-t border-surface-300 pt-6">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-surface-600 font-mono">
+                    Last trade
+                  </span>
+                  <span className="text-green-400 font-mono">
+                    Weather Arb &mdash; +$0.36
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm mt-3">
+                  <span className="text-surface-600 font-mono">
+                    Open positions
+                  </span>
+                  <span className="text-white font-mono">7</span>
+                </div>
+                <div className="flex items-center justify-between text-sm mt-3">
+                  <span className="text-surface-600 font-mono">Uptime</span>
+                  <span className="text-white font-mono">99.8%</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── Stats Bar ─────────────────────────────────────────────────── */}
-      <section className="relative">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 py-10">
-          <div className="glass-card rounded-2xl px-8 py-8">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
-              <div className="relative">
-                <div className="flex justify-center mb-3">
-                  <div className="rounded-lg bg-brand-500/10 p-2.5">
-                    <DollarSign className="h-5 w-5 text-brand-400" />
-                  </div>
-                </div>
-                <p className="text-3xl lg:text-4xl font-bold text-surface-900 stat-value">$9B+</p>
-                <p className="mt-1 text-sm text-surface-600">
-                  Polymarket 2024 Volume
-                </p>
-                <div className="hidden sm:block absolute right-0 top-1/2 -translate-y-1/2 w-px h-12 bg-gradient-to-b from-transparent via-surface-300/50 to-transparent" />
-              </div>
-              <div className="relative">
-                <div className="flex justify-center mb-3">
-                  <div className="rounded-lg bg-brand-500/10 p-2.5">
-                    <Layers className="h-5 w-5 text-brand-400" />
-                  </div>
-                </div>
-                <p className="text-3xl lg:text-4xl font-bold text-surface-900 stat-value">6 Strategies</p>
-                <p className="mt-1 text-sm text-surface-600">
-                  Curated &amp; transparent
-                </p>
-                <div className="hidden sm:block absolute right-0 top-1/2 -translate-y-1/2 w-px h-12 bg-gradient-to-b from-transparent via-surface-300/50 to-transparent" />
-              </div>
-              <div className="relative">
-                <div className="flex justify-center mb-3">
-                  <div className="rounded-lg bg-brand-500/10 p-2.5">
-                    <Timer className="h-5 w-5 text-brand-400" />
-                  </div>
-                </div>
-                <p className="text-3xl lg:text-4xl font-bold text-surface-900 stat-value">24/7</p>
-                <p className="mt-1 text-sm text-surface-600">
-                  Automated execution
-                </p>
-                <div className="hidden sm:block absolute right-0 top-1/2 -translate-y-1/2 w-px h-12 bg-gradient-to-b from-transparent via-surface-300/50 to-transparent" />
-              </div>
-              <div>
-                <div className="flex justify-center mb-3">
-                  <div className="rounded-lg bg-brand-500/10 p-2.5">
-                    <Activity className="h-5 w-5 text-brand-400" />
-                  </div>
-                </div>
-                <p className="text-3xl lg:text-4xl font-bold text-surface-900 stat-value">94%</p>
-                <p className="mt-1 text-sm text-surface-600">
-                  NOAA forecast accuracy
-                </p>
-              </div>
+      <section className="bg-surface-50 border-y border-surface-300">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
+            <div>
+              <p className="text-4xl lg:text-5xl font-bold text-white stat-value">
+                $9B+
+              </p>
+              <p className="mt-2 text-sm text-surface-600">
+                Polymarket 2024 Volume
+              </p>
+            </div>
+            <div>
+              <p className="text-4xl lg:text-5xl font-bold text-white stat-value">
+                6
+              </p>
+              <p className="mt-2 text-sm text-surface-600">
+                Curated Strategies
+              </p>
+            </div>
+            <div>
+              <p className="text-4xl lg:text-5xl font-bold text-white stat-value">
+                24/7
+              </p>
+              <p className="mt-2 text-sm text-surface-600">
+                Automated Execution
+              </p>
+            </div>
+            <div>
+              <p className="text-4xl lg:text-5xl font-bold text-white stat-value">
+                94%
+              </p>
+              <p className="mt-2 text-sm text-surface-600">
+                NOAA Forecast Accuracy
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* ── How The Edge Works ─────────────────────────────────────────── */}
-      <section className="py-28">
+      <section className="bg-surface-0 py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-surface-900">
-              Why Bots Win on Polymarket
-            </h2>
-            <p className="mt-6 text-lg lg:text-xl text-surface-700 max-w-2xl mx-auto">
-              Human traders react to headlines. Bots react to data — faster,
-              more precisely, and 24 hours a day.
-            </p>
-          </div>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-16">
+            The Weather Arb Edge
+          </h2>
 
-          {/* Weather Arb Example */}
-          <div className="max-w-4xl mx-auto mb-16">
-            <div className="glass-card rounded-2xl overflow-hidden">
-              <div className="p-8">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="h-12 w-12 rounded-xl bg-brand-600/10 flex items-center justify-center">
-                    <CloudSun className="h-6 w-6 text-brand-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-surface-900">Weather Arb — The Edge in Action</h3>
-                    <p className="text-sm text-surface-700">
-                      How data-driven bots exploit the gap between science and sentiment
-                    </p>
-                  </div>
-                </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+            {/* Left — Explanation */}
+            <div>
+              <p className="text-lg text-surface-800 leading-relaxed mb-6">
+                NOAA weather forecasts are{" "}
+                <span className="text-white font-semibold">94% accurate</span>{" "}
+                for 3-day temperature predictions. But Polymarket prices
+                routinely imply only{" "}
+                <span className="text-white font-semibold">
+                  11% probability
+                </span>{" "}
+                for the same outcomes.
+              </p>
+              <p className="text-lg text-surface-800 leading-relaxed mb-6">
+                That gap&nbsp;&mdash;{" "}
+                <span className="text-white font-semibold">
+                  94% vs 11%
+                </span>{" "}
+                &nbsp;&mdash; represents an{" "}
+                <span className="text-brand-400 font-bold">
+                  8.5x expected value
+                </span>{" "}
+                edge. Our bot identifies these mispricings across 60+ weather
+                markets, sizes positions using Kelly criterion, and executes 24/7.
+              </p>
+              <p className="text-lg text-surface-800 leading-relaxed">
+                The market is driven by sentiment. The bot is driven by data. The
+                edge is the difference.
+              </p>
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                  <div className="relative rounded-xl border border-brand-500/20 bg-brand-500/5 p-6 text-center">
-                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-500/40 to-transparent" />
-                    <p className="text-xs font-mono text-surface-600 uppercase tracking-wider mb-3">
-                      NOAA Forecast
-                    </p>
-                    <p className="text-5xl font-bold text-brand-400 stat-value">94%</p>
-                    <p className="text-sm text-surface-700 mt-2">
-                      Probability of above-normal temps
-                    </p>
+            {/* Right — Trade Card */}
+            <div className="bg-surface-100 border border-surface-300">
+              <div className="border-b border-surface-300 px-6 py-4 flex items-center justify-between">
+                <p className="text-xs font-mono text-surface-600 uppercase tracking-wider">
+                  Trade Example
+                </p>
+                <span className="text-xs font-mono text-green-400">
+                  FILLED
+                </span>
+              </div>
+              <div className="p-6">
+                <p className="text-xl font-bold text-white mb-6">
+                  NYC 74-76&deg;F&nbsp;&mdash; Saturday
+                </p>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-surface-300 pb-4">
+                    <span className="text-sm text-surface-600 font-mono">
+                      NOAA Confidence
+                    </span>
+                    <span className="text-sm font-bold text-brand-400 font-mono">
+                      94%
+                    </span>
                   </div>
-                  <div className="relative rounded-xl border border-surface-300 bg-surface-200/30 p-6 text-center">
-                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-surface-500/30 to-transparent" />
-                    <p className="text-xs font-mono text-surface-600 uppercase tracking-wider mb-3">
-                      Polymarket Price
-                    </p>
-                    <p className="text-5xl font-bold text-surface-900 stat-value">11&cent;</p>
-                    <p className="text-sm text-surface-700 mt-2">
-                      Implied probability: 11%
-                    </p>
+                  <div className="flex items-center justify-between border-b border-surface-300 pb-4">
+                    <span className="text-sm text-surface-600 font-mono">
+                      Market Price
+                    </span>
+                    <span className="text-sm font-bold text-white font-mono">
+                      11&cent;
+                    </span>
                   </div>
-                  <div className="relative rounded-xl border border-green-500/30 bg-green-500/5 p-6 text-center">
-                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-green-500/40 to-transparent" />
-                    <p className="text-xs font-mono text-green-400 uppercase tracking-wider mb-3">
+                  <div className="flex items-center justify-between border-b border-surface-300 pb-4">
+                    <span className="text-sm text-surface-600 font-mono">
                       Expected Value
-                    </p>
-                    <p className="text-5xl font-bold text-green-400 stat-value">8.5x</p>
-                    <p className="text-sm text-surface-700 mt-2">
-                      EV gap the bot captures
-                    </p>
+                    </span>
+                    <span className="text-sm font-bold text-green-400 font-mono">
+                      +$0.83/trade
+                    </span>
                   </div>
-                </div>
-
-                {/* Visual Flow with connecting lines */}
-                <div className="relative flex items-center justify-center gap-4 flex-wrap text-sm py-4">
-                  <div className="hidden md:block absolute top-1/2 left-[20%] right-[20%] h-px bg-gradient-to-r from-brand-500/20 via-brand-500/40 to-green-500/20" />
-                  <div className="relative flex items-center gap-2 rounded-full bg-surface-200/80 border border-surface-300 px-5 py-2.5 backdrop-blur-sm">
-                    <CloudSun className="h-4 w-4 text-brand-400" />
-                    <span className="text-surface-900 font-medium">NOAA Forecast</span>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-surface-500" />
-                  <div className="relative flex items-center gap-2 rounded-full bg-brand-600/10 border border-brand-500/30 px-5 py-2.5 backdrop-blur-sm shadow-lg shadow-brand-500/5">
-                    <Bot className="h-4 w-4 text-brand-400" />
-                    <span className="text-brand-400 font-medium">MarketPilot Bot</span>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-surface-500" />
-                  <div className="relative flex items-center gap-2 rounded-full bg-green-500/10 border border-green-500/30 px-5 py-2.5 backdrop-blur-sm shadow-lg shadow-green-500/5">
-                    <TrendingUp className="h-4 w-4 text-green-400" />
-                    <span className="text-green-400 font-medium">Profit</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-surface-600 font-mono">
+                      Result
+                    </span>
+                    <span className="text-sm font-bold text-green-400 font-mono">
+                      Filled at 47&cent; &rarr; +$0.36 profit
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Key Points */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
-            {[
-              { icon: ScanLine, text: "60+ markets scanned" },
-              { icon: Clock, text: "720 scans per day" },
-              { icon: ShieldCheck, text: "Kelly-criterion sizing" },
-              { icon: Zap, text: "No sleep, no emotions" },
-            ].map((point) => (
-              <div
-                key={point.text}
-                className="flex items-center gap-3 rounded-xl border border-surface-300 bg-surface-100 p-5 card-glow transition-all duration-300 hover:-translate-y-[1px] hover:shadow-lg hover:shadow-black/20"
-              >
-                <div className="rounded-lg bg-brand-500/10 p-2">
-                  <point.icon className="h-5 w-5 text-brand-400 shrink-0" />
-                </div>
-                <span className="text-sm font-medium text-surface-900">
-                  {point.text}
-                </span>
-              </div>
-            ))}
           </div>
         </div>
       </section>
 
       {/* ── Live Performance ──────────────────────────────────────────── */}
-      <section className="py-28">
+      <section className="bg-surface-50 py-24 sm:py-32 border-y border-surface-300">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-surface-900">
-              Live Strategy Performance
-            </h2>
-            <p className="mt-6 text-lg lg:text-xl text-surface-700 max-w-2xl mx-auto">
-              Real results from bots running on Polymarket. Updated continuously.
-            </p>
-          </div>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+            Paper Trading Results
+          </h2>
+          <p className="text-lg text-surface-600 mb-12">Updated daily.</p>
 
-          <div className="max-w-4xl mx-auto">
-            <div className="glass-card rounded-2xl overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/5">
-                      <th className="text-left py-5 px-6 text-xs font-mono text-surface-600 uppercase tracking-wider">
-                        Strategy
-                      </th>
-                      <th className="text-right py-5 px-6 text-xs font-mono text-surface-600 uppercase tracking-wider">
-                        ROI
-                      </th>
-                      <th className="text-right py-5 px-6 text-xs font-mono text-surface-600 uppercase tracking-wider">
-                        Trades
-                      </th>
-                      <th className="text-right py-5 px-6 text-xs font-mono text-surface-600 uppercase tracking-wider">
-                        Win Rate
-                      </th>
-                      <th className="text-right py-5 px-6 text-xs font-mono text-surface-600 uppercase tracking-wider">
-                        Status
-                      </th>
+          <div className="max-w-5xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-surface-300">
+                    <th className="text-left py-4 px-6 text-xs font-mono text-surface-600 uppercase tracking-wider">
+                      Strategy
+                    </th>
+                    <th className="text-right py-4 px-6 text-xs font-mono text-surface-600 uppercase tracking-wider">
+                      30D Return
+                    </th>
+                    <th className="text-right py-4 px-6 text-xs font-mono text-surface-600 uppercase tracking-wider">
+                      Win Rate
+                    </th>
+                    <th className="text-right py-4 px-6 text-xs font-mono text-surface-600 uppercase tracking-wider">
+                      Max Drawdown
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {performanceData.map((row) => (
+                    <tr
+                      key={row.strategy}
+                      className="border-b border-surface-300 last:border-0"
+                    >
+                      <td className="py-4 px-6 font-medium text-white">
+                        {row.strategy}
+                      </td>
+                      <td className="py-4 px-6 text-right font-mono font-bold text-green-400">
+                        {row.return30d}
+                      </td>
+                      <td className="py-4 px-6 text-right font-mono text-surface-800">
+                        {row.winRate}
+                      </td>
+                      <td className="py-4 px-6 text-right font-mono text-red-400">
+                        {row.maxDrawdown}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {performanceData.map((row, i) => (
-                      <tr
-                        key={row.strategy}
-                        className={`border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors ${
-                          i % 2 === 1 ? "bg-white/[0.01]" : ""
-                        }`}
-                      >
-                        <td className="py-5 px-6 font-medium text-surface-900">
-                          {row.strategy}
-                        </td>
-                        <td className="py-5 px-6 text-right font-mono font-bold text-green-400">
-                          {row.roi}
-                        </td>
-                        <td className="py-5 px-6 text-right font-mono text-surface-700">
-                          {row.trades.toLocaleString()}
-                        </td>
-                        <td className="py-5 px-6 text-right font-mono text-surface-700">
-                          {row.winRate}
-                        </td>
-                        <td className="py-5 px-6 text-right">
-                          <span className="inline-flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-400 pulse-dot" />
-                            <Badge variant="live" className="text-[10px]">
-                              {row.status}
-                            </Badge>
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <p className="mt-4 text-xs text-surface-600 text-center">
-              Past performance — simulated or live — does not guarantee future
-              results.
+            <p className="mt-6 text-xs text-surface-600">
+              Past performance&nbsp;&mdash; simulated or live&nbsp;&mdash; does
+              not guarantee future results. Paper trading uses real market data
+              but no actual capital is at risk.
             </p>
           </div>
         </div>
       </section>
 
-      {/* ── Trust ─────────────────────────────────────────────────────── */}
-      <section className="py-28">
+      {/* ── Feature Cards ─────────────────────────────────────────────── */}
+      <section className="bg-surface-0 py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-surface-900">
-              Built for Trust
-            </h2>
-            <p className="mt-6 text-lg lg:text-xl text-surface-700 max-w-2xl mx-auto">
-              We earn your confidence through transparency, not promises.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {trustPoints.map((point) => (
-              <Card key={point.title} className="group relative overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {featureCards.map((card) => (
+              <Card key={card.title}>
                 <CardHeader>
-                  <div className="h-14 w-14 rounded-xl bg-brand-600/10 flex items-center justify-center mb-4 transition-all duration-300 group-hover:bg-brand-600/20 group-hover:scale-105">
-                    <point.icon className="h-7 w-7 text-brand-400" />
-                  </div>
-                  <CardTitle className="text-lg">{point.title}</CardTitle>
-                  <CardDescription className="leading-relaxed">{point.description}</CardDescription>
+                  <CardTitle className="text-xl">{card.title}</CardTitle>
+                  <CardDescription className="leading-relaxed mt-2">
+                    {card.description}
+                  </CardDescription>
                 </CardHeader>
               </Card>
             ))}
@@ -385,34 +369,22 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA ───────────────────────────────────────────────────────── */}
-      <section className="relative py-32 overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-brand-600/5 via-brand-600/10 to-surface-0" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-brand-600/10 rounded-full blur-[100px] pointer-events-none" />
-
-        <div className="relative mx-auto max-w-3xl px-6 lg:px-8 text-center">
-          <div className="h-16 w-16 rounded-2xl bg-brand-600/10 flex items-center justify-center mx-auto mb-8 shadow-lg shadow-brand-500/10">
-            <Bot className="h-8 w-8 text-brand-400" />
-          </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-surface-900">
-            Ready to Capture the Edge?
+      <section className="bg-surface-50 border-y border-surface-300 py-24 sm:py-32">
+        <div className="mx-auto max-w-3xl px-6 lg:px-8 text-center">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
+            Start Trading in 60 Seconds
           </h2>
-          <p className="mt-6 text-lg lg:text-xl text-surface-700 max-w-xl mx-auto">
-            Start with paper trading — no capital required. Let the bot prove
-            itself before you risk a dollar.
+          <p className="mt-6 text-lg text-surface-800 max-w-xl mx-auto">
+            Create a free account. Deploy a paper bot. Watch it trade.
           </p>
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="mt-10">
             <Link href="/signup">
-              <Button size="lg" className="relative group overflow-hidden shadow-lg shadow-brand-500/20 hover:shadow-xl hover:shadow-brand-500/30 transition-shadow">
-                <span className="relative z-10 flex items-center gap-2">
-                  Launch Your First Paper Bot
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </span>
-              </Button>
-            </Link>
-            <Link href="/weather-arb">
-              <Button variant="outline" size="lg" className="backdrop-blur-sm">
-                Explore Weather Arb
+              <Button
+                size="xl"
+                className="bg-brand-600 text-white hover:bg-brand-500 px-12"
+              >
+                Get Started Free
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
           </div>
@@ -420,21 +392,21 @@ export default function HomePage() {
       </section>
 
       {/* ── Risk Disclaimer ───────────────────────────────────────────── */}
-      <section className="border-t border-surface-300 py-8">
+      <section className="bg-surface-0 border-t border-surface-300 py-8">
         <div className="mx-auto max-w-4xl px-6 lg:px-8">
           <div className="flex items-start gap-3 text-surface-600">
-            <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
             <p className="text-xs leading-relaxed">
-              <strong className="text-surface-700">Risk Disclaimer:</strong>{" "}
-              Prediction market trading involves significant risk and is not
+              <strong className="text-surface-800">Risk Disclaimer:</strong>{" "}
+              Trading prediction markets involves significant risk and is not
               suitable for all individuals. Past performance of any strategy,
               whether simulated or live, does not guarantee future results. You
               should not trade with funds you cannot afford to lose. MarketPilot
-              provides tools and automation — it does not provide financial
-              advice. Please review our{" "}
+              provides tools and automation&nbsp;&mdash; it does not provide
+              financial advice. Please review our{" "}
               <Link
                 href="/risk-disclosure"
-                className="text-brand-400 hover:text-brand-500 underline"
+                className="text-brand-400 hover:text-brand-300 underline"
               >
                 Risk Disclosure
               </Link>{" "}
