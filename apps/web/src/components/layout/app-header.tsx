@@ -67,13 +67,15 @@ export function AppHeader({ onMenuToggle }: { onMenuToggle?: () => void }) {
           <Badge variant="default">{planTier}</Badge>
         )}
 
-        <div className="hidden sm:block">
-          <ConnectButton
-            accountStatus="avatar"
-            chainStatus="icon"
-            showBalance={false}
-          />
-        </div>
+        {planTier === "ELITE" && (
+          <div className="hidden sm:block">
+            <ConnectButton
+              accountStatus="avatar"
+              chainStatus="icon"
+              showBalance={false}
+            />
+          </div>
+        )}
 
         <Link
           href="/app/alerts"

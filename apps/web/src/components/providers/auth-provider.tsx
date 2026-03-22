@@ -40,6 +40,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       pathname !== "/app/onboarding"
     ) {
       router.replace("/app/onboarding");
+      return;
+    }
+
+    // Redirect non-admins away from admin pages
+    if (
+      pathname.startsWith("/app/admin") &&
+      user &&
+      user.role !== "ADMIN" &&
+      user.role !== "SUPER_ADMIN"
+    ) {
+      router.replace("/app/dashboard");
     }
   }, [initialized, user, pathname, router]);
 

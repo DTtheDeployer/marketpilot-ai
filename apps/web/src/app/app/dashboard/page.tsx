@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useMemo } from "react";
 import {
   Card,
@@ -34,6 +35,8 @@ import {
 } from "recharts";
 import { api } from "@/lib/api-client";
 import { useApi } from "@/hooks/use-api";
+import { useAuthStore } from "@/stores/auth-store";
+import { useAccount } from "wagmi";
 import {
   demoDashboardStats,
   demoPnlData,
@@ -43,6 +46,10 @@ import {
 import type { BotSummary, NotificationItem } from "@marketpilot/types";
 
 export default function DashboardPage() {
+  const { user } = useAuthStore();
+  const { isConnected: walletConnected } = useAccount();
+  const planTier = user?.subscription?.planTier || "FREE";
+
   const fetchBots = useCallback(() => api.getBots(), []);
   const fetchAlerts = useCallback(() => api.getAlerts(), []);
 
@@ -144,6 +151,47 @@ export default function DashboardPage() {
           Paper Trading
         </Badge>
       </div>
+
+      {/* Plan banner */}
+      {planTier === "FREE" && (
+        <div className="flex items-center justify-between rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-3 text-sm text-blue-300">
+          <span>
+            You&apos;re on the <strong>Free Plan</strong> &mdash; All trades are simulated with virtual capital. Ready for more?
+          </span>
+          <Link
+            href="/app/settings/billing"
+            className="ml-4 shrink-0 font-medium text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            Upgrade to Strategist &rarr;
+          </Link>
+        </div>
+      )}
+      {planTier === "PRO" && (
+        <div className="flex items-center justify-between rounded-lg border border-surface-300 bg-surface-200/50 px-4 py-3 text-sm text-surface-700">
+          <span>
+            <strong>Strategist Plan</strong> &mdash; Paper trading with all strategies. Want to trade real money?
+          </span>
+          <Link
+            href="/app/settings/billing"
+            className="ml-4 shrink-0 font-medium text-brand-400 hover:text-brand-300 transition-colors"
+          >
+            Upgrade to Operator &rarr;
+          </Link>
+        </div>
+      )}
+      {planTier === "ELITE" && !walletConnected && (
+        <div className="flex items-center justify-between rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-300">
+          <span>
+            <strong>Operator Plan</strong> &mdash; Live trading enabled!
+          </span>
+          <Link
+            href="/app/connect"
+            className="ml-4 shrink-0 font-medium text-green-400 hover:text-green-300 transition-colors"
+          >
+            Connect your wallet to go live &rarr;
+          </Link>
+        </div>
+      )}
 
       {/* Error banner */}
       {(botsError || alertsError) && (

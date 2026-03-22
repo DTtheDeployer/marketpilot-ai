@@ -16,6 +16,7 @@ import {
 import { Zap, Shield, ArrowRight, Layers, Loader2, AlertCircle } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { useApi } from "@/hooks/use-api";
+import { useAuthStore } from "@/stores/auth-store";
 import type { StrategyMeta } from "@marketpilot/types";
 
 const categories = [
@@ -42,8 +43,17 @@ const tierColors: Record<string, "default" | "success" | "warning" | "danger"> =
   ELITE: "warning",
 };
 
+const tierRank: Record<string, number> = { FREE: 0, PRO: 1, ELITE: 2 };
+const tierUpgradeLabel: Record<string, string> = {
+  PRO: "Strategist",
+  ELITE: "Operator",
+};
+
 export default function StrategiesPage() {
   const [activeCategory, setActiveCategory] = useState("ALL");
+  const [blockedStrategy, setBlockedStrategy] = useState<string | null>(null);
+  const { user } = useAuthStore();
+  const planTier = user?.subscription?.planTier || "FREE";
 
   const fetchStrategies = useCallback(() => api.getStrategies(), []);
   const {
@@ -147,13 +157,42 @@ export default function StrategiesPage() {
                     ))}
                   </div>
                 </CardContent>
-                <CardFooter>
-                  <Link href={`/app/strategies/${strategy.slug}`} className="w-full">
-                    <Button variant="secondary" className="w-full gap-2">
-                      Configure
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
+                <CardFooter className="flex-col gap-2">
+                  {(tierRank[strategy.minTier] ?? 0) > (tierRank[planTier] ?? 0) ? (
+                    <>
+                      <Button
+                        variant="secondary"
+                        className="w-full gap-2"
+                        onClick={() =>
+                          setBlockedStrategy(
+                            blockedStrategy === strategy.id ? null : strategy.id
+                          )
+                        }
+                      >
+                        Configure
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                      {blockedStrategy === strategy.id && (
+                        <div className="w-full rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
+                          This strategy requires the{" "}
+                          <strong>{tierUpgradeLabel[strategy.minTier] ?? strategy.minTier}</strong> plan.{" "}
+                          <Link
+                            href="/app/settings/billing"
+                            className="underline hover:text-amber-300"
+                          >
+                            Upgrade &rarr;
+                          </Link>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <Link href={`/app/strategies/${strategy.slug}`} className="w-full">
+                      <Button variant="secondary" className="w-full gap-2">
+                        Configure
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  )}
                 </CardFooter>
               </Card>
             );

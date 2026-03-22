@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { useApi, useMutation } from "@/hooks/use-api";
+import { useAuthStore } from "@/stores/auth-store";
+import { useAccount } from "wagmi";
 import type { StrategyMeta } from "@marketpilot/types";
 
 const riskLabels: Record<number, { label: string; color: string }> = {
@@ -46,6 +48,11 @@ export default function StrategyDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { user } = useAuthStore();
+  const { isConnected: walletConnected } = useAccount();
+  const planTier = user?.subscription?.planTier || "FREE";
+  const isElite = planTier === "ELITE";
+  const [selectedMode, setSelectedMode] = useState<"PAPER" | "LIVE">("PAPER");
 
   const fetchStrategy = useCallback(() => api.getStrategy(id), [id]);
   const {
@@ -92,7 +99,7 @@ export default function StrategyDetailPage({
       await api.createBot({
         name: `${strategy.name} Bot`,
         strategySlug: strategy.slug,
-        mode: "PAPER",
+        mode: selectedMode,
         config: {
           market: values.market,
           maxPositionSize: values.maxPosition,
@@ -355,20 +362,82 @@ export default function StrategyDetailPage({
         </div>
       )}
 
+      {/* Trading Mode Selector */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Trading Mode</CardTitle>
+          <CardDescription>
+            Choose whether to run this bot in paper (simulated) or live mode
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setSelectedMode("PAPER")}
+              className={cn(
+                "flex-1 rounded-lg border px-4 py-3 text-sm font-medium transition-all",
+                selectedMode === "PAPER"
+                  ? "border-brand-500 bg-brand-600/10 text-brand-400"
+                  : "border-surface-300 bg-surface-200/50 text-surface-700 hover:bg-surface-200"
+              )}
+            >
+              Paper Mode
+              <p className="text-xs font-normal mt-1 text-surface-600">
+                Simulated trades with virtual capital
+              </p>
+            </button>
+            {isElite ? (
+              <button
+                onClick={() => setSelectedMode("LIVE")}
+                className={cn(
+                  "flex-1 rounded-lg border px-4 py-3 text-sm font-medium transition-all",
+                  selectedMode === "LIVE"
+                    ? "border-green-500 bg-green-500/10 text-green-400"
+                    : "border-surface-300 bg-surface-200/50 text-surface-700 hover:bg-surface-200"
+                )}
+              >
+                Live Mode
+                <p className="text-xs font-normal mt-1 text-surface-600">
+                  Real trades with real capital
+                </p>
+              </button>
+            ) : (
+              <div className="flex-1 rounded-lg border border-surface-300 bg-surface-200/30 px-4 py-3 text-sm font-medium text-surface-500 cursor-not-allowed opacity-60">
+                Live Mode
+                <p className="text-xs font-normal mt-1 text-surface-500">
+                  Requires Operator plan
+                </p>
+              </div>
+            )}
+          </div>
+          {selectedMode === "LIVE" && !walletConnected && (
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>
+                Connect your wallet first.{" "}
+                <Link href="/app/connect" className="underline hover:text-amber-300">
+                  Go to Connect
+                </Link>
+              </span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Action buttons */}
       <div className="flex items-center gap-4 pt-2">
         <Button
           size="lg"
           className="gap-2"
           onClick={handleLaunchBot}
-          disabled={launchLoading}
+          disabled={launchLoading || (selectedMode === "LIVE" && !walletConnected)}
         >
           {launchLoading ? (
             <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
             <Rocket className="h-5 w-5" />
           )}
-          {launchLoading ? "Launching..." : "Launch Bot (Paper)"}
+          {launchLoading ? "Launching..." : `Launch Bot (${selectedMode === "LIVE" ? "Live" : "Paper"})`}
         </Button>
         <Button
           variant="secondary"

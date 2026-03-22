@@ -25,6 +25,7 @@ import {
   Plug,
 } from "lucide-react";
 import { useState } from "react";
+import { useAuthStore } from "@/stores/auth-store";
 
 const faqs = [
   {
@@ -67,6 +68,40 @@ const comparisonRows = [
 
 export default function ConnectPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const { user } = useAuthStore();
+  const planTier = user?.subscription?.planTier || "FREE";
+
+  if (planTier !== "ELITE") {
+    return (
+      <div className="mx-auto max-w-lg py-24">
+        <Card>
+          <CardHeader className="text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600/10 border border-brand-500/20 mb-3">
+              <Plug className="h-6 w-6 text-brand-400" />
+            </div>
+            <CardTitle className="text-xl">Operator Plan Required</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-sm text-surface-600">
+              Wallet connection is available on the Operator plan ($149/mo). Paper trading doesn&apos;t require a wallet.
+            </p>
+            <Link href="/app/settings/billing">
+              <Button className="w-full gap-2">
+                Upgrade to Operator
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link
+              href="/app/dashboard"
+              className="block text-sm text-surface-600 hover:text-surface-900 transition-colors"
+            >
+              &larr; Back to Dashboard
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-10 p-6">

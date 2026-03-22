@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { cn } from "@marketpilot/ui";
 import { useState } from "react";
+import { useAuthStore } from "@/stores/auth-store";
 
 const mainNav = [
   { href: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -58,6 +59,9 @@ const bottomNav = [
 
 export function AppSidebar({ open, onClose }: { open?: boolean; onClose?: () => void }) {
   const pathname = usePathname();
+  const { user } = useAuthStore();
+  const planTier = user?.subscription?.planTier || "FREE";
+  const isAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
   const [settingsOpen, setSettingsOpen] = useState(pathname.startsWith("/app/settings"));
   const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/app/admin"));
 
@@ -103,7 +107,11 @@ export function AppSidebar({ open, onClose }: { open?: boolean; onClose?: () => 
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-          {mainNav.map((item) => {
+          {mainNav.filter((item) => {
+            // Only show Connect nav item for ELITE (Operator) users
+            if (item.href === "/app/connect" && planTier !== "ELITE") return false;
+            return true;
+          }).map((item) => {
             const active = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
@@ -172,12 +180,13 @@ export function AppSidebar({ open, onClose }: { open?: boolean; onClose?: () => 
             )}
           </div>
 
+          {/* Admin — only for ADMIN / SUPER_ADMIN */}
+          {isAdmin && (<>
           {/* Divider */}
           <div className="pt-1 pb-1">
             <div className="h-px bg-gradient-to-r from-surface-300/50 via-surface-300 to-surface-300/50" />
           </div>
 
-          {/* Admin */}
           <div className="pt-1">
             <button
               onClick={() => setAdminOpen(!adminOpen)}
@@ -217,6 +226,7 @@ export function AppSidebar({ open, onClose }: { open?: boolean; onClose?: () => 
               </div>
             )}
           </div>
+          </>)}
         </nav>
 
         {/* Bottom */}
