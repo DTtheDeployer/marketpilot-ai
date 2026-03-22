@@ -10,6 +10,7 @@ import {
   Button,
   Badge,
 } from "@marketpilot/ui";
+import Link from "next/link";
 import {
   CloudSun,
   Play,
@@ -23,6 +24,7 @@ import {
   Clock,
   MapPin,
   Activity,
+  Settings2,
 } from "lucide-react";
 
 interface WeatherStatus {
@@ -193,6 +195,12 @@ export default function WeatherArbPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/app/weather-arb/configure">
+            <Button variant="outline">
+              <Settings2 className="h-4 w-4" />
+              Configure
+            </Button>
+          </Link>
           {!isRunning ? (
             <Button onClick={handleStart} disabled={actionLoading === "start"}>
               <Play className="h-4 w-4" />

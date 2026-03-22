@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Button,
@@ -11,19 +11,48 @@ import {
   CardDescription,
   CardContent,
   Input,
+  Badge,
 } from "@marketpilot/ui";
 import { UserPlus } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
-import { ApiError } from "@/lib/api-client";
+import { api, ApiError } from "@/lib/api-client";
 
 export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="text-surface-700 text-center p-8">Loading...</div>}>
+      <SignupForm />
+    </Suspense>
+  );
+}
+
+function SignupForm() {
   const router = useRouter();
-  const { signup, loading } = useAuthStore();
+  const searchParams = useSearchParams();
+  const { loading } = useAuthStore();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralValid, setReferralValid] = useState(false);
+
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) {
+      setReferralCode(ref);
+      api
+        .get<{ success: boolean; data: { valid: boolean } }>(
+          `/api/referrals/validate/${ref}`
+        )
+        .then((res) => {
+          setReferralValid(res.data.valid);
+        })
+        .catch(() => {
+          setReferralValid(false);
+        });
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +64,24 @@ export default function SignupPage() {
     }
 
     try {
-      await signup(email, password, name || undefined);
+      const res = await api.post<{
+        success: boolean;
+        data: { token: string; user: unknown };
+      }>("/api/auth/signup", {
+        email,
+        password,
+        name: name || undefined,
+        referralCode: referralValid ? referralCode : undefined,
+      });
+
+      if (res.success && res.data.token) {
+        localStorage.setItem("marketpilot_token", res.data.token);
+        localStorage.setItem(
+          "marketpilot_user",
+          JSON.stringify(res.data.user)
+        );
+      }
+
       router.push("/app/onboarding");
     } catch (err) {
       if (err instanceof ApiError) {
@@ -58,6 +104,16 @@ export default function SignupPage() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {referralCode && referralValid && (
+            <div className="flex items-center justify-center">
+              <Badge
+                variant="default"
+                className="bg-brand-600/10 text-brand-400 border-brand-600/20"
+              >
+                Referred by: {referralCode}
+              </Badge>
+            </div>
+          )}
           {error && (
             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
               {error}

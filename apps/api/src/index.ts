@@ -12,6 +12,7 @@ import { billingRouter } from "./routes/billing";
 import { adminRouter } from "./routes/admin";
 import { onboardingRouter } from "./routes/onboarding";
 import { marketsRouter } from "./routes/markets";
+import { referralsRouter } from "./routes/referrals";
 import { healthRouter } from "./routes/health";
 import { errorHandler } from "./middleware/error-handler";
 import { logger } from "./lib/logger";
@@ -47,6 +48,7 @@ app.use("/api/billing", billingRouter);
 app.use("/api/markets", marketsRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/onboarding", onboardingRouter);
+app.use("/api/referrals", referralsRouter);
 
 // ── Error handling ───────────────────────────────────────────────────────────
 app.use(errorHandler);

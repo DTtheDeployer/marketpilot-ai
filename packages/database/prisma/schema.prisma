@@ -130,6 +130,9 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  referralCode         String?              @unique
+  referredBy           String?
+
   profile              UserProfile?
   accounts             Account[]
   sessions             Session[]
@@ -151,6 +154,18 @@ model User {
 
   @@index([email])
   @@index([role])
+}
+
+model Referral {
+  id           String    @id @default(cuid())
+  referrerId   String
+  referredId   String    @unique
+  status       String    @default("pending") // pending, converted, expired
+  creditAmount Float?
+  createdAt    DateTime  @default(now())
+  convertedAt  DateTime?
+
+  @@index([referrerId])
 }
 
 model UserProfile {

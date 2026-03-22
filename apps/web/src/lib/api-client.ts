@@ -108,11 +108,11 @@ class ApiClient {
     return res;
   }
 
-  async signup(email: string, password: string, name?: string) {
+  async signup(email: string, password: string, name?: string, referralCode?: string) {
     const res = await this.post<{
       success: boolean;
       data: { token: string; user: AuthUser };
-    }>("/api/auth/signup", { email, password, name });
+    }>("/api/auth/signup", { email, password, name, referralCode });
 
     if (res.success && res.data.token) {
       localStorage.setItem("marketpilot_token", res.data.token);

@@ -1,13 +1,13 @@
 "use client";
 
-import { Bell, Search, User, LogOut } from "lucide-react";
+import { Bell, Search, User, LogOut, Menu } from "lucide-react";
 import { Badge } from "@marketpilot/ui";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api-client";
 
-export function AppHeader() {
+export function AppHeader({ onMenuToggle }: { onMenuToggle?: () => void }) {
   const { user, logout } = useAuthStore();
   const [unreadCount, setUnreadCount] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
@@ -31,9 +31,16 @@ export function AppHeader() {
   }, [fetchUnread]);
 
   return (
-    <header className="h-16 border-b border-surface-300 bg-surface-50/80 backdrop-blur-sm flex items-center justify-between px-6">
-      {/* Search */}
+    <header className="h-16 border-b border-surface-300 bg-surface-50/80 backdrop-blur-sm flex items-center justify-between px-4 md:px-6">
+      {/* Left side: hamburger + search */}
       <div className="flex items-center gap-3 flex-1 max-w-md">
+        <button
+          onClick={onMenuToggle}
+          className="md:hidden p-2 -ml-2 rounded-lg text-surface-700 hover:bg-surface-200 transition-colors"
+          aria-label="Toggle menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-600" />
           <input
@@ -45,9 +52,10 @@ export function AppHeader() {
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         <Badge variant={tradingMode === "LIVE" ? "live" : "paper"}>
-          {tradingMode === "LIVE" ? "Live Mode" : "Paper Mode"}
+          <span className="hidden sm:inline">{tradingMode === "LIVE" ? "Live Mode" : "Paper Mode"}</span>
+          <span className="sm:hidden">{tradingMode === "LIVE" ? "Live" : "Paper"}</span>
         </Badge>
 
         {planTier !== "FREE" && (
