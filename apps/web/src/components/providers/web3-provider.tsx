@@ -7,39 +7,24 @@ import { createConfig } from "wagmi";
 import {
   RainbowKitProvider,
   darkTheme,
-  connectorsForWallets,
+  getDefaultConfig,
 } from "@rainbow-me/rainbowkit";
-import {
-  metaMaskWallet,
-  walletConnectWallet,
-  coinbaseWallet,
-} from "@rainbow-me/rainbowkit/wallets";
 import "@rainbow-me/rainbowkit/styles.css";
+import { useState } from "react";
 
-const connectors = connectorsForWallets(
-  [
-    {
-      groupName: "Recommended",
-      wallets: [metaMaskWallet, walletConnectWallet, coinbaseWallet],
-    },
-  ],
-  {
-    appName: "MarketPilot AI",
-    projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_ID || "marketpilot",
-  }
-);
-
-const config = createConfig({
-  connectors,
+const config = getDefaultConfig({
+  appName: "MarketPilot AI",
+  // Get a free project ID at https://cloud.walletconnect.com
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_ID || "b1e3f1b3c3e3f1b3c3e3f1b3c3e3f1b3",
   chains: [polygon],
   transports: {
     [polygon.id]: http("https://polygon-bor-rpc.publicnode.com"),
   },
 });
 
-const queryClient = new QueryClient();
-
 export function Web3Provider({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient());
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
@@ -49,6 +34,7 @@ export function Web3Provider({ children }: { children: React.ReactNode }) {
             accentColorForeground: "white",
             borderRadius: "medium",
           })}
+          modalSize="compact"
         >
           {children}
         </RainbowKitProvider>
