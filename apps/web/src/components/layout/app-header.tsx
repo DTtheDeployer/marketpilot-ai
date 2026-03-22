@@ -1,7 +1,7 @@
 "use client";
 
-import { Bell, Search, User, LogOut, Menu } from "lucide-react";
-import { Badge } from "@marketpilot/ui";
+import { Bell, Search, User, LogOut, Menu, Zap } from "lucide-react";
+import { Badge, Button } from "@marketpilot/ui";
 import Link from "next/link";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAuthStore } from "@/stores/auth-store";
@@ -63,8 +63,18 @@ export function AppHeader({ onMenuToggle }: { onMenuToggle?: () => void }) {
           <span className="sm:hidden">{tradingMode === "LIVE" ? "Live" : "Paper"}</span>
         </Badge>
 
-        {planTier !== "FREE" && (
-          <Badge variant="default">{planTier}</Badge>
+        {planTier === "ELITE" ? (
+          <Badge variant="success">Operator</Badge>
+        ) : (
+          <Link href="/app/settings/billing">
+            <Button size="sm" className="gap-1.5 hidden sm:flex">
+              <Zap className="h-3.5 w-3.5" />
+              {planTier === "FREE" ? "Upgrade" : "Go Live"}
+            </Button>
+            <Button size="sm" className="sm:hidden px-2">
+              <Zap className="h-3.5 w-3.5" />
+            </Button>
+          </Link>
         )}
 
         {planTier === "ELITE" && (
