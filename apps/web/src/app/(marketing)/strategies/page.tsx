@@ -8,7 +8,14 @@ import {
   CardContent,
   Badge,
 } from "@marketpilot/ui";
-import { ArrowRight, ShieldCheck, AlertTriangle } from "lucide-react";
+import {
+  ArrowRight,
+  ShieldCheck,
+  AlertTriangle,
+  CloudSun,
+  TrendingUp,
+  Star,
+} from "lucide-react";
 import { demoStrategies } from "@/lib/demo-data";
 
 const riskLabels: Record<number, { label: string; variant: "success" | "warning" | "danger" }> = {
@@ -32,6 +39,7 @@ const categoryLabels: Record<string, string> = {
   MOMENTUM: "Momentum",
   TIME_DECAY: "Time Decay",
   CROSS_MARKET: "Cross-Market",
+  WEATHER_ARB: "Weather Arbitrage",
 };
 
 export default function StrategiesPage() {
@@ -51,6 +59,76 @@ export default function StrategiesPage() {
             clear risk profile. No black boxes — understand exactly what every
             bot does before you deploy it.
           </p>
+        </div>
+      </section>
+
+      {/* ── Featured: Weather Arb ────────────────────────────────────── */}
+      <section className="pb-12">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <Link href="/weather-arb" className="block group">
+            <Card className="relative overflow-hidden border-brand-500/30 hover:border-brand-500/60 transition-colors">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-brand-600/5 to-transparent pointer-events-none" />
+              <CardHeader className="pb-0">
+                <div className="flex items-center gap-3 mb-4">
+                  <Badge variant="warning" className="text-[10px]">
+                    <Star className="h-3 w-3 mr-1" />
+                    Featured
+                  </Badge>
+                  <Badge variant="default" className="text-[10px]">Pro</Badge>
+                  <span className="text-xs font-mono text-surface-600 uppercase tracking-wider">
+                    Weather Arbitrage
+                  </span>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="h-12 w-12 rounded-lg bg-brand-600/10 flex items-center justify-center shrink-0">
+                    <CloudSun className="h-6 w-6 text-brand-400" />
+                  </div>
+                  <div className="flex-1">
+                    <CardTitle className="text-2xl mb-2">
+                      Weather Arbitrage
+                    </CardTitle>
+                    <CardDescription className="text-base leading-relaxed max-w-3xl">
+                      Exploits the gap between NOAA&apos;s probabilistic weather
+                      forecasts (85-95% accuracy) and retail-priced Polymarket
+                      weather contracts. When science says 94% and the market
+                      says 11&cent;, the bot captures the difference.
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap items-center gap-6 mt-6 pt-6 border-t border-surface-300">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-green-400" />
+                    <span className="text-sm font-mono font-bold text-green-400">+62.1% ROI</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-surface-600" />
+                    <span className="text-xs text-surface-600">Risk:</span>
+                    <Badge variant="warning" className="text-[10px]">
+                      Elevated (4/5)
+                    </Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {["weather", "NOAA", "data-driven", "arbitrage", "high-EV"].map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-[10px] px-2 py-0.5 rounded-full bg-surface-200 text-surface-600 border border-surface-300"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="ml-auto">
+                    <span className="inline-flex items-center gap-1 text-sm font-medium text-brand-400 group-hover:text-brand-500 transition-colors">
+                      View Strategy
+                      <ArrowRight className="h-4 w-4" />
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </section>
 
@@ -114,6 +192,38 @@ export default function StrategiesPage() {
             Strategy Deep Dives
           </h2>
           <div className="space-y-8">
+            {/* Weather Arb Deep Dive */}
+            <div className="border-b border-surface-300 pb-8">
+              <div className="flex items-center gap-3 mb-2">
+                <h3 className="text-lg font-semibold text-surface-900">
+                  Weather Arbitrage
+                </h3>
+                <Badge variant="warning" className="text-[10px]">
+                  <Star className="h-3 w-3 mr-1" />
+                  Featured
+                </Badge>
+              </div>
+              <p className="text-sm text-surface-700 leading-relaxed">
+                NOAA&apos;s Climate Prediction Center publishes probabilistic
+                weather forecasts with 85-95% historical accuracy. Polymarket
+                weather contracts are priced by retail traders who rarely
+                consult these forecasts, creating persistent mispricings. When
+                NOAA assigns a 94% probability to above-normal temperatures and
+                the market prices the contract at 11&cent;, the expected value
+                of a YES position is massively positive. This strategy
+                systematically identifies and exploits these gaps using Kelly
+                criterion sizing and multiple layers of risk controls.
+              </p>
+              <Link
+                href="/weather-arb"
+                className="inline-flex items-center gap-1 text-sm font-medium text-brand-400 hover:text-brand-500 mt-3 transition-colors"
+              >
+                Read full strategy breakdown
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* Existing strategies */}
             {demoStrategies.map((strategy) => (
               <div key={strategy.id} className="border-b border-surface-300 pb-8 last:border-0 last:pb-0">
                 <h3 className="text-lg font-semibold text-surface-900">

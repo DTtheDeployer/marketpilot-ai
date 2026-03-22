@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import backtests, paper, risk, strategies, live, market_maker
+from app.api import backtests, paper, risk, strategies, live, market_maker, weather_arb
 from app.core.config import settings
 
 logging.basicConfig(level=logging.INFO)
@@ -57,6 +57,7 @@ app.include_router(paper.router)
 app.include_router(risk.router)
 app.include_router(live.router)
 app.include_router(market_maker.router)
+app.include_router(weather_arb.router)
 
 
 @app.get("/health")
