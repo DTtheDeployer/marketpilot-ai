@@ -46,7 +46,7 @@ const strategyLinks: Record<string, string> = {
   "spread-capture": "/strategies/spread-capture",
   "mean-reversion": "/strategies/mean-reversion",
   "orderbook-imbalance": "/strategies/orderbook-imbalance",
-  "momentum-unusual-activity": "#",
+  "momentum-unusual-activity": "/strategies/momentum-surge",
   "time-decay-repricing": "/strategies/time-decay",
   "cross-market-divergence": "/strategies/cross-market",
 };
