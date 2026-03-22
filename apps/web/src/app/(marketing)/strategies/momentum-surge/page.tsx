@@ -280,6 +280,63 @@ export default function MomentumSurgePage() {
             </Card>
           </div>
 
+          {/* Capital Scale Table */}
+          <div className="mt-16">
+            <h3 className="text-xl font-bold text-white mb-2">Returns Scale With Capital</h3>
+            <p className="text-sm text-surface-600 mb-8">Moderate scenario &mdash; 25&ndash;50% monthly return range</p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-surface-300">
+                    <th className="pb-3 pr-6 text-left font-mono text-surface-600">Starting Capital</th>
+                    <th className="pb-3 pr-6 text-left font-mono text-surface-600">Monthly Low</th>
+                    <th className="pb-3 pr-6 text-left font-mono text-surface-600">Monthly High</th>
+                    <th className="pb-3 pr-6 text-left font-mono text-surface-600">Trades/Week</th>
+                    <th className="pb-3 text-left font-mono text-surface-600">Max Position</th>
+                  </tr>
+                </thead>
+                <tbody className="font-mono">
+                  {[
+                    { capital: "$50", low: "+$13", high: "+$25", trades: "4\u20136", maxPos: "$10" },
+                    { capital: "$100", low: "+$25", high: "+$50", trades: "5\u20138", maxPos: "$20" },
+                    { capital: "$250", low: "+$63", high: "+$125", trades: "6\u201310", maxPos: "$50" },
+                    { capital: "$500", low: "+$125", high: "+$250", trades: "8\u201312", maxPos: "$100" },
+                    { capital: "$1,000", low: "+$250", high: "+$500", trades: "8\u201312", maxPos: "$200" },
+                    { capital: "$5,000", low: "+$1,250", high: "+$2,500", trades: "10\u201315", maxPos: "$1,000" },
+                  ].map((row) => (
+                    <tr key={row.capital} className="border-b border-surface-300/50">
+                      <td className="py-3 pr-6 text-surface-900">{row.capital}</td>
+                      <td className="py-3 pr-6 text-green-400">{row.low}</td>
+                      <td className="py-3 pr-6 text-green-400">{row.high}</td>
+                      <td className="py-3 pr-6 text-surface-900">{row.trades}</td>
+                      <td className="py-3 text-surface-900">{row.maxPos}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Visual bar chart */}
+            <div className="mt-8 space-y-3">
+              {[
+                { capital: "$50", range: "+$13\u2013$25", width: "5%" },
+                { capital: "$100", range: "+$25\u2013$50", width: "10%" },
+                { capital: "$250", range: "+$63\u2013$125", width: "25%" },
+                { capital: "$500", range: "+$125\u2013$250", width: "50%" },
+                { capital: "$1K", range: "+$250\u2013$500", width: "75%" },
+                { capital: "$5K", range: "+$1.25K\u2013$2.5K", width: "100%" },
+              ].map((bar) => (
+                <div key={bar.capital} className="flex items-center gap-4">
+                  <span className="text-sm font-mono text-surface-600 w-12 text-right">{bar.capital}</span>
+                  <div className="flex-1 h-6 bg-surface-300 overflow-hidden">
+                    <div className="h-full bg-brand-500" style={{ width: bar.width }} />
+                  </div>
+                  <span className="text-sm font-mono text-green-400 w-28">{bar.range}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <p className="text-xs text-surface-600 mt-6">
             Hypothetical returns based on backtest simulations. Not a guarantee.
             Actual results depend on market conditions, liquidity, and timing.

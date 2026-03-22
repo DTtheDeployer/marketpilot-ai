@@ -418,6 +418,63 @@ export default function SpreadCapturePage() {
             </div>
           </div>
 
+          {/* Capital Scale Table */}
+          <div className="mt-16">
+            <h3 className="text-xl font-bold text-white mb-2">Returns Scale With Capital</h3>
+            <p className="text-sm text-surface-600 mb-8">Moderate scenario &mdash; 8&ndash;15% monthly return range</p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-surface-300">
+                    <th className="pb-3 pr-6 text-left font-mono text-surface-600">Starting Capital</th>
+                    <th className="pb-3 pr-6 text-left font-mono text-surface-600">Monthly Low</th>
+                    <th className="pb-3 pr-6 text-left font-mono text-surface-600">Monthly High</th>
+                    <th className="pb-3 pr-6 text-left font-mono text-surface-600">Trades/Day</th>
+                    <th className="pb-3 text-left font-mono text-surface-600">Max Position</th>
+                  </tr>
+                </thead>
+                <tbody className="font-mono">
+                  {[
+                    { capital: "$50", low: "+$4", high: "+$8", trades: "4\u20136", maxPos: "$5" },
+                    { capital: "$100", low: "+$8", high: "+$15", trades: "5\u20138", maxPos: "$10" },
+                    { capital: "$250", low: "+$20", high: "+$38", trades: "6\u201310", maxPos: "$25" },
+                    { capital: "$500", low: "+$40", high: "+$75", trades: "8\u201315", maxPos: "$50" },
+                    { capital: "$1,000", low: "+$80", high: "+$150", trades: "10\u201318", maxPos: "$100" },
+                    { capital: "$5,000", low: "+$400", high: "+$750", trades: "12\u201320", maxPos: "$500" },
+                  ].map((row) => (
+                    <tr key={row.capital} className="border-b border-surface-300/50">
+                      <td className="py-3 pr-6 text-surface-900">{row.capital}</td>
+                      <td className="py-3 pr-6 text-green-400">{row.low}</td>
+                      <td className="py-3 pr-6 text-green-400">{row.high}</td>
+                      <td className="py-3 pr-6 text-surface-900">{row.trades}</td>
+                      <td className="py-3 text-surface-900">{row.maxPos}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Visual bar chart */}
+            <div className="mt-8 space-y-3">
+              {[
+                { capital: "$50", range: "+$4\u2013$8", width: "5%" },
+                { capital: "$100", range: "+$8\u2013$15", width: "10%" },
+                { capital: "$250", range: "+$20\u2013$38", width: "25%" },
+                { capital: "$500", range: "+$40\u2013$75", width: "50%" },
+                { capital: "$1K", range: "+$80\u2013$150", width: "75%" },
+                { capital: "$5K", range: "+$400\u2013$750", width: "100%" },
+              ].map((bar) => (
+                <div key={bar.capital} className="flex items-center gap-4">
+                  <span className="text-sm font-mono text-surface-600 w-12 text-right">{bar.capital}</span>
+                  <div className="flex-1 h-6 bg-surface-300 overflow-hidden">
+                    <div className="h-full bg-brand-500" style={{ width: bar.width }} />
+                  </div>
+                  <span className="text-sm font-mono text-green-400 w-28">{bar.range}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <p className="mt-8 text-xs text-surface-600 text-center max-w-2xl mx-auto">
             Projections based on backtest data. Actual results will vary. Past
             performance does not guarantee future returns.
