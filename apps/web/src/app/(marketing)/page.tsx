@@ -629,117 +629,408 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── See It Working — Dashboard Preview ───────────────────────── */}
+      {/* ── Your Command Center — Dashboard Preview ──────────────────── */}
       <section className="bg-surface-0 py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-            See It Working
+            Your Command Center
           </h2>
           <p className="text-lg text-surface-600 mb-16 max-w-2xl">
-            This is what your dashboard looks like after deploying a Weather Arb bot.
+            Everything you need to monitor, control, and profit&nbsp;&mdash; in one view.
           </p>
 
-          <div className="bg-surface-100 border border-surface-300 max-w-5xl mx-auto">
-            {/* Top bar */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-surface-300">
-              <div className="flex items-center gap-3">
+          <div className="bg-surface-100 border border-surface-300 max-w-6xl mx-auto">
+            {/* Window chrome */}
+            <div className="flex items-center justify-between px-6 py-3 border-b border-surface-300">
+              <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-red-500/60" />
                 <span className="w-3 h-3 rounded-full bg-yellow-500/60" />
                 <span className="w-3 h-3 rounded-full bg-green-500/60" />
               </div>
               <p className="text-xs font-mono text-surface-600">
-                MarketPilot Dashboard
+                MarketPilot AI Dashboard
               </p>
               <div />
             </div>
 
-            {/* Stat row */}
-            <div className="grid grid-cols-3 gap-6 p-6 border-b border-surface-300">
-              <div>
-                <p className="text-xs font-mono text-surface-600 uppercase tracking-wider mb-2">
+            {/* Top row — 4 stat cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-6 border-b border-surface-300">
+              <div className="bg-surface-50 border border-surface-300 p-4">
+                <p className="text-[10px] font-mono text-surface-600 uppercase tracking-wider mb-1">
                   Total P&amp;L
                 </p>
-                <p className="text-3xl font-bold text-green-400 font-mono">
-                  +$142.50
+                <p className="text-2xl lg:text-3xl font-bold text-green-400 font-mono">
+                  +$2,847.50
+                </p>
+                <p className="text-xs font-mono text-green-400 mt-1">+284.7%</p>
+              </div>
+              <div className="bg-surface-50 border border-surface-300 p-4">
+                <p className="text-[10px] font-mono text-surface-600 uppercase tracking-wider mb-1">
+                  Today&apos;s P&amp;L
+                </p>
+                <p className="text-2xl lg:text-3xl font-bold text-green-400 font-mono">
+                  +$127.40
                 </p>
               </div>
-              <div>
-                <p className="text-xs font-mono text-surface-600 uppercase tracking-wider mb-2">
-                  Win Rate
-                </p>
-                <p className="text-3xl font-bold text-white font-mono">71%</p>
-              </div>
-              <div>
-                <p className="text-xs font-mono text-surface-600 uppercase tracking-wider mb-2">
+              <div className="bg-surface-50 border border-surface-300 p-4">
+                <p className="text-[10px] font-mono text-surface-600 uppercase tracking-wider mb-1">
                   Active Bots
                 </p>
-                <p className="text-3xl font-bold text-white font-mono">3</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-2xl lg:text-3xl font-bold text-white font-mono">4</p>
+                  <span className="w-2 h-2 rounded-full bg-green-400 pulse-dot" />
+                </div>
+              </div>
+              <div className="bg-surface-50 border border-surface-300 p-4">
+                <p className="text-[10px] font-mono text-surface-600 uppercase tracking-wider mb-1">
+                  Win Rate
+                </p>
+                <p className="text-2xl lg:text-3xl font-bold text-white font-mono">
+                  73.2<span className="text-lg">%</span>
+                </p>
               </div>
             </div>
 
-            {/* PnL Chart (SVG) */}
+            {/* Middle — P&L chart */}
             <div className="p-6 border-b border-surface-300">
               <p className="text-xs font-mono text-surface-600 uppercase tracking-wider mb-4">
                 Cumulative P&amp;L &mdash; Last 30 Days
               </p>
-              <div className="h-32 relative">
+              <div className="h-40 relative">
                 <svg
-                  viewBox="0 0 600 120"
+                  viewBox="0 0 600 150"
                   className="w-full h-full"
                   preserveAspectRatio="none"
                 >
                   <defs>
-                    <linearGradient id="pnlGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="rgb(74, 222, 128)" stopOpacity="0.2" />
+                    <linearGradient id="dashPnlGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="rgb(74, 222, 128)" stopOpacity="0.25" />
                       <stop offset="100%" stopColor="rgb(74, 222, 128)" stopOpacity="0" />
                     </linearGradient>
                   </defs>
+                  {/* Grid lines */}
+                  <line x1="0" y1="37" x2="600" y2="37" stroke="rgb(100,100,100)" strokeWidth="0.5" strokeDasharray="4 4" />
+                  <line x1="0" y1="75" x2="600" y2="75" stroke="rgb(100,100,100)" strokeWidth="0.5" strokeDasharray="4 4" />
+                  <line x1="0" y1="112" x2="600" y2="112" stroke="rgb(100,100,100)" strokeWidth="0.5" strokeDasharray="4 4" />
+                  {/* Chart line */}
                   <path
-                    d="M0,100 L50,95 L100,88 L150,82 L200,70 L250,65 L300,55 L350,48 L400,35 L450,30 L500,22 L550,18 L600,10"
+                    d="M0,130 L20,128 L40,125 L60,122 L80,118 L100,115 L120,110 L140,108 L160,105 L180,98 L200,95 L220,90 L240,85 L260,82 L280,78 L300,72 L320,68 L340,60 L360,55 L380,52 L400,48 L420,42 L440,38 L460,35 L480,30 L500,26 L520,22 L540,18 L560,15 L580,12 L600,8"
                     fill="none"
                     stroke="rgb(74, 222, 128)"
-                    strokeWidth="2"
+                    strokeWidth="2.5"
                   />
+                  {/* Gradient fill */}
                   <path
-                    d="M0,100 L50,95 L100,88 L150,82 L200,70 L250,65 L300,55 L350,48 L400,35 L450,30 L500,22 L550,18 L600,10 L600,120 L0,120 Z"
-                    fill="url(#pnlGradient)"
+                    d="M0,130 L20,128 L40,125 L60,122 L80,118 L100,115 L120,110 L140,108 L160,105 L180,98 L200,95 L220,90 L240,85 L260,82 L280,78 L300,72 L320,68 L340,60 L360,55 L380,52 L400,48 L420,42 L440,38 L460,35 L480,30 L500,26 L520,22 L540,18 L560,15 L580,12 L600,8 L600,150 L0,150 Z"
+                    fill="url(#dashPnlGradient)"
                   />
                 </svg>
+                {/* X axis labels */}
+                <div className="absolute bottom-0 left-0 right-0 flex justify-between px-2">
+                  <span className="text-[10px] font-mono text-surface-600">Feb 20</span>
+                  <span className="text-[10px] font-mono text-surface-600">Mar 1</span>
+                  <span className="text-[10px] font-mono text-surface-600">Mar 10</span>
+                  <span className="text-[10px] font-mono text-surface-600">Mar 20</span>
+                </div>
               </div>
             </div>
 
-            {/* Recent trades */}
-            <div className="p-6">
-              <p className="text-xs font-mono text-surface-600 uppercase tracking-wider mb-4">
-                Recent Trades
-              </p>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm font-mono">
-                  <div className="flex items-center gap-3">
-                    <Check className="w-3.5 h-3.5 text-green-400" />
-                    <span className="text-white">NYC 74-76&deg;F</span>
-                    <span className="text-surface-600">2m ago</span>
-                  </div>
-                  <span className="text-green-400 font-bold">+$0.76</span>
+            {/* Bottom row — two columns */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-surface-300">
+              {/* Left — Active Bots */}
+              <div className="p-6">
+                <p className="text-xs font-mono text-surface-600 uppercase tracking-wider mb-4">
+                  Active Bots
+                </p>
+                <div className="space-y-3">
+                  {[
+                    { name: "Weather Arb", status: "Running", statusColor: "bg-green-400", pnl: "+$1,240.20", uptime: "14h uptime" },
+                    { name: "Mean Reversion", status: "Running", statusColor: "bg-green-400", pnl: "+$891.30", uptime: "22h uptime" },
+                    { name: "Spread Capture", status: "Running", statusColor: "bg-green-400", pnl: "+$492.10", uptime: "3d uptime" },
+                    { name: "Momentum Surge", status: "Paused", statusColor: "bg-amber-400", pnl: "+$223.90", uptime: "\u2014" },
+                  ].map((bot) => (
+                    <div key={bot.name} className="flex items-center justify-between text-sm font-mono">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${bot.statusColor} shrink-0`} />
+                        <span className="text-white">{bot.name}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-surface-600 text-xs hidden sm:inline">{bot.status}</span>
+                        <span className="text-green-400 font-bold">{bot.pnl}</span>
+                        <span className="text-surface-600 text-xs w-16 text-right">{bot.uptime}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center justify-between text-sm font-mono">
-                  <div className="flex items-center gap-3">
-                    <Check className="w-3.5 h-3.5 text-green-400" />
-                    <span className="text-white">SEA 58-60&deg;F</span>
-                    <span className="text-surface-600">1h ago</span>
-                  </div>
-                  <span className="text-green-400 font-bold">+$0.80</span>
-                </div>
-                <div className="flex items-center justify-between text-sm font-mono">
-                  <div className="flex items-center gap-3">
-                    <span className="w-2 h-2 rounded-full bg-brand-400" />
-                    <span className="text-white">ATL 82-84&deg;F</span>
-                    <span className="text-surface-600">1h ago</span>
-                  </div>
-                  <span className="text-brand-400">Open</span>
+              </div>
+
+              {/* Right — Recent Trades */}
+              <div className="p-6">
+                <p className="text-xs font-mono text-surface-600 uppercase tracking-wider mb-4">
+                  Recent Trades
+                </p>
+                <div className="space-y-3">
+                  {[
+                    { time: "2m ago", action: "BUY", actionColor: "text-brand-400", market: "NYC 74-76\u00B0F", size: "$2.00", price: "11\u00A2", bot: "Weather Arb", result: "" },
+                    { time: "18m ago", action: "SELL", actionColor: "text-green-400", market: "CHI 68-70\u00B0F", size: "$2.00", price: "47\u00A2", bot: "Weather Arb", result: "+$0.72 \u2713" },
+                    { time: "1h ago", action: "BUY", actionColor: "text-brand-400", market: "Spread ATL", size: "$1.50", price: "48\u00A2", bot: "Spread Cap.", result: "" },
+                    { time: "3h ago", action: "SELL", actionColor: "text-green-400", market: "Mean Rev NYC", size: "$3.00", price: "62\u00A2", bot: "Mean Rev.", result: "+$0.84 \u2713" },
+                  ].map((trade, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs font-mono gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-surface-600 shrink-0">{trade.time}</span>
+                        <span className={`${trade.actionColor} font-bold shrink-0`}>{trade.action}</span>
+                        <span className="text-white truncate">{trade.market}</span>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="text-surface-600 hidden sm:inline">{trade.size}</span>
+                        <span className="text-surface-600">{trade.price}</span>
+                        {trade.result ? (
+                          <span className="text-green-400 font-bold">{trade.result}</span>
+                        ) : (
+                          <span className="text-surface-600 text-[10px]">{trade.bot}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Free vs Pro vs Operator — Tier Comparison ────────────────── */}
+      <section className="bg-surface-50 py-24 sm:py-32 border-y border-surface-300">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 text-center">
+            Start Free. Scale When Ready.
+          </h2>
+          <p className="text-lg text-surface-600 mb-16 max-w-2xl mx-auto text-center">
+            Every user starts with paper trading. Upgrade when you&apos;ve seen the edge.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+            {/* Explorer — Free */}
+            <div className="bg-surface-100 border border-surface-300 p-8 flex flex-col">
+              <p className="text-sm font-bold text-white uppercase tracking-wider mb-1">Explorer</p>
+              <p className="text-3xl font-bold text-white font-mono mb-6">
+                $0<span className="text-lg text-surface-600">/mo</span>
+              </p>
+
+              <div className="space-y-3 mb-8">
+                {[
+                  "1 paper trading bot",
+                  "Weather Arb strategy",
+                  "Basic dashboard",
+                  "5 backtests/month",
+                  "Community support",
+                ].map((f) => (
+                  <div key={f} className="flex items-start gap-2 text-sm">
+                    <Check className="w-4 h-4 text-green-400 shrink-0 mt-0.5" />
+                    <span className="text-surface-800">{f}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Mini dashboard mock — Free tier */}
+              <div className="bg-surface-50 border border-surface-300 mb-6">
+                <div className="flex items-center gap-1.5 px-3 py-2 border-b border-surface-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500/60" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-500/60" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500/60" />
+                </div>
+                <div className="p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                    <span className="text-[10px] font-mono text-white">Weather Arb</span>
+                    <span className="text-[10px] font-mono text-green-400 ml-auto">+$42.10</span>
+                  </div>
+                  <div className="h-8 bg-surface-100 border border-surface-300 flex items-center justify-center">
+                    <span className="text-[9px] font-mono text-surface-600">Basic stats</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-xs font-mono text-surface-600 mb-1">Performance preview</p>
+                <p className="text-sm font-mono text-green-400">$100 &rarr; $150&ndash;200/mo (paper)</p>
+              </div>
+
+              <div className="mt-auto">
+                <Link href="/signup">
+                  <Button className="w-full border border-surface-400 text-white hover:bg-surface-200 bg-transparent">
+                    Start Free <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Strategist — $49/mo */}
+            <div className="bg-surface-100 border-2 border-brand-500 p-8 flex flex-col relative">
+              <div className="absolute -top-3 right-6">
+                <span className="bg-brand-500 text-white text-xs font-bold font-mono px-3 py-1 uppercase tracking-wider">
+                  Most Popular
+                </span>
+              </div>
+              <p className="text-sm font-bold text-white uppercase tracking-wider mb-1">Strategist</p>
+              <p className="text-3xl font-bold text-white font-mono mb-6">
+                $49<span className="text-lg text-surface-600">/mo</span>
+              </p>
+
+              <p className="text-xs text-surface-600 mb-3">Everything in Free, plus:</p>
+              <div className="space-y-3 mb-8">
+                {[
+                  "ALL 6 strategies",
+                  "5 active bots simultaneously",
+                  "Advanced analytics",
+                  "50 backtests/month",
+                  "Real-time alerts",
+                  "Strategy customization",
+                  "Email support",
+                ].map((f) => (
+                  <div key={f} className="flex items-start gap-2 text-sm">
+                    <Check className="w-4 h-4 text-green-400 shrink-0 mt-0.5" />
+                    <span className="text-surface-800">{f}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Mini dashboard mock — Strategist tier */}
+              <div className="bg-surface-50 border border-surface-300 mb-6">
+                <div className="flex items-center gap-1.5 px-3 py-2 border-b border-surface-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500/60" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-500/60" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500/60" />
+                </div>
+                <div className="p-3">
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <div className="bg-surface-100 border border-surface-300 p-1.5">
+                      <p className="text-[8px] font-mono text-surface-600">P&amp;L</p>
+                      <p className="text-[10px] font-mono text-green-400 font-bold">+$847.50</p>
+                    </div>
+                    <div className="bg-surface-100 border border-surface-300 p-1.5">
+                      <p className="text-[8px] font-mono text-surface-600">Win Rate</p>
+                      <p className="text-[10px] font-mono text-white font-bold">73%</p>
+                    </div>
+                  </div>
+                  {/* Mini chart */}
+                  <div className="h-6 mb-2">
+                    <svg viewBox="0 0 200 24" className="w-full h-full" preserveAspectRatio="none">
+                      <path d="M0,20 L30,18 L60,15 L90,12 L120,10 L150,7 L180,5 L200,3" fill="none" stroke="rgb(74,222,128)" strokeWidth="1.5" />
+                      <path d="M0,20 L30,18 L60,15 L90,12 L120,10 L150,7 L180,5 L200,3 L200,24 L0,24 Z" fill="rgb(74,222,128)" fillOpacity="0.1" />
+                    </svg>
+                  </div>
+                  <div className="space-y-1">
+                    {["Weather Arb", "Mean Rev.", "Spread Cap."].map((b) => (
+                      <div key={b} className="flex items-center gap-1.5">
+                        <span className="w-1 h-1 rounded-full bg-green-400" />
+                        <span className="text-[9px] font-mono text-white">{b}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-xs font-mono text-surface-600 mb-1">Performance preview</p>
+                <p className="text-sm font-mono text-green-400">$100 &rarr; $250&ndash;500/mo (paper, all strategies)</p>
+              </div>
+
+              <div className="mt-auto">
+                <Link href="/signup">
+                  <Button className="w-full bg-brand-600 text-white hover:bg-brand-500">
+                    Upgrade to Strategist <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Operator — $149/mo */}
+            <div className="bg-surface-100 border border-surface-300 p-8 flex flex-col">
+              <p className="text-sm font-bold text-white uppercase tracking-wider mb-1">Operator</p>
+              <p className="text-3xl font-bold text-white font-mono mb-6">
+                $149<span className="text-lg text-surface-600">/mo</span>
+              </p>
+
+              <p className="text-xs text-surface-600 mb-3">Everything in Strategist, plus:</p>
+              <div className="space-y-3 mb-8">
+                {[
+                  "LIVE TRADING enabled",
+                  "10 active bots",
+                  "Unlimited backtests",
+                  "Priority alerts",
+                  "Wallet integration",
+                  "API access",
+                  "Priority support",
+                ].map((f) => (
+                  <div key={f} className="flex items-start gap-2 text-sm">
+                    <Check className="w-4 h-4 text-green-400 shrink-0 mt-0.5" />
+                    <span className="text-surface-800">{f}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Mini dashboard mock — Operator tier */}
+              <div className="bg-surface-50 border border-surface-300 mb-6">
+                <div className="flex items-center justify-between px-3 py-2 border-b border-surface-300">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500/60" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-500/60" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500/60" />
+                  </div>
+                  <span className="text-[8px] font-mono font-bold text-green-400 bg-green-400/10 px-1.5 py-0.5">LIVE</span>
+                </div>
+                <div className="p-3">
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <div className="bg-surface-100 border border-surface-300 p-1.5">
+                      <p className="text-[8px] font-mono text-surface-600">Real P&amp;L</p>
+                      <p className="text-[10px] font-mono text-green-400 font-bold">+$2,847</p>
+                    </div>
+                    <div className="bg-surface-100 border border-surface-300 p-1.5">
+                      <p className="text-[8px] font-mono text-surface-600">Wallet</p>
+                      <p className="text-[10px] font-mono text-white font-bold">0x4f...a2</p>
+                    </div>
+                  </div>
+                  {/* Mini chart */}
+                  <div className="h-6 mb-2">
+                    <svg viewBox="0 0 200 24" className="w-full h-full" preserveAspectRatio="none">
+                      <path d="M0,22 L25,20 L50,17 L75,14 L100,11 L125,9 L150,7 L175,4 L200,2" fill="none" stroke="rgb(74,222,128)" strokeWidth="1.5" />
+                      <path d="M0,22 L25,20 L50,17 L75,14 L100,11 L125,9 L150,7 L175,4 L200,2 L200,24 L0,24 Z" fill="rgb(74,222,128)" fillOpacity="0.1" />
+                    </svg>
+                  </div>
+                  <div className="space-y-1">
+                    {["Weather Arb", "Mean Rev.", "Spread Cap.", "Momentum", "+2 more"].map((b) => (
+                      <div key={b} className="flex items-center gap-1.5">
+                        <span className="w-1 h-1 rounded-full bg-green-400" />
+                        <span className="text-[9px] font-mono text-white">{b}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-xs font-mono text-surface-600 mb-1">Performance preview</p>
+                <p className="text-sm font-mono text-green-400">$1,000 &rarr; $1,500&ndash;3,000/mo (live, real returns)</p>
+              </div>
+
+              <div className="mt-auto">
+                <Link href="/signup">
+                  <Button className="w-full border border-surface-400 text-white hover:bg-surface-200 bg-transparent">
+                    Go Operator <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* All plans include */}
+          <div className="mt-12 text-center">
+            <p className="text-sm text-surface-600">
+              <span className="text-surface-800 font-medium">All plans include:</span>{" "}
+              Paper trading, risk controls, emergency stop, trade logging, Telegram alerts
+            </p>
           </div>
         </div>
       </section>

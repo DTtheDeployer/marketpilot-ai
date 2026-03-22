@@ -16,6 +16,7 @@ import {
   Users,
   ChevronDown,
   CloudSun,
+  Plug,
   X,
 } from "lucide-react";
 import { cn } from "@marketpilot/ui";
@@ -24,6 +25,7 @@ import { useState } from "react";
 const mainNav = [
   { href: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/app/weather-arb", label: "Weather Arb", icon: CloudSun },
+  { href: "/app/connect", label: "Connect", icon: Plug },
   { href: "/app/strategies", label: "Strategies", icon: Lightbulb },
   { href: "/app/bots", label: "Bots", icon: Bot },
   { href: "/app/backtests", label: "Backtests", icon: FlaskConical },
