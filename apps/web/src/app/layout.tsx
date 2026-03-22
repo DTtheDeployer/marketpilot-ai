@@ -39,7 +39,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen font-sans">
+      <body className="min-h-screen font-sans noise-bg gradient-bg">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

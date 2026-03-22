@@ -128,6 +128,8 @@ export default function DashboardPage() {
     );
   }
 
+  const hasRunningBots = stats.activeBots > 0;
+
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -153,45 +155,58 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Stats row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Total P&L"
-          value={`$${stats.totalPnl.toLocaleString()}`}
-          change={`${stats.totalPnlPercent > 0 ? "+" : ""}${stats.totalPnlPercent}%`}
-          changeType={stats.totalPnlPercent >= 0 ? "positive" : "negative"}
-          icon={DollarSign}
-        />
-        <StatCard
-          title="Active Bots"
-          value={stats.activeBots}
-          change={`${stats.capitalDeployed.toLocaleString()} deployed`}
-          changeType="neutral"
-          icon={Bot}
-        />
-        <StatCard
-          title="Total Trades"
-          value={stats.totalTrades.toLocaleString()}
-          change="Last 30 days"
-          changeType="neutral"
-          icon={BarChart3}
-        />
-        <StatCard
-          title="Win Rate"
-          value={`${stats.winRate}%`}
-          change={stats.winRate >= 55 ? "Above average" : "Below average"}
-          changeType={stats.winRate >= 55 ? "positive" : "negative"}
-          icon={TrendingUp}
-        />
+      {/* Stats row with connecting gradient */}
+      <div className="relative">
+        {/* Subtle connecting gradient line between cards */}
+        <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-brand-500/5 via-brand-500/15 to-brand-500/5 -translate-y-1/2 z-0" />
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            title="Total P&L"
+            value={`$${stats.totalPnl.toLocaleString()}`}
+            change={`${stats.totalPnlPercent > 0 ? "+" : ""}${stats.totalPnlPercent}%`}
+            changeType={stats.totalPnlPercent >= 0 ? "positive" : "negative"}
+            icon={DollarSign}
+          />
+          <StatCard
+            title="Active Bots"
+            value={
+              <span className="flex items-center gap-2">
+                {stats.activeBots}
+                {hasRunningBots && (
+                  <span className="inline-block w-2 h-2 rounded-full bg-green-400 pulse-dot" />
+                )}
+              </span>
+            }
+            change={`${stats.capitalDeployed.toLocaleString()} deployed`}
+            changeType="neutral"
+            icon={Bot}
+          />
+          <StatCard
+            title="Total Trades"
+            value={stats.totalTrades.toLocaleString()}
+            change="Last 30 days"
+            changeType="neutral"
+            icon={BarChart3}
+          />
+          <StatCard
+            title="Win Rate"
+            value={`${stats.winRate}%`}
+            change={stats.winRate >= 55 ? "Above average" : "Below average"}
+            changeType={stats.winRate >= 55 ? "positive" : "negative"}
+            icon={TrendingUp}
+          />
+        </div>
       </div>
 
       {/* P&L Chart */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>Cumulative P&L — Last 30 Days</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-72">
+          <div className="relative h-72">
+            {/* Gradient background fade for chart area */}
+            <div className="absolute inset-0 bg-gradient-to-b from-brand-500/[0.02] to-transparent rounded-lg pointer-events-none" />
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={pnlData}>
                 <defs>
@@ -219,10 +234,12 @@ export default function DashboardPage() {
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#0f172a",
-                    border: "1px solid #334155",
-                    borderRadius: "8px",
+                    backgroundColor: "rgba(15, 23, 42, 0.95)",
+                    border: "1px solid rgba(99, 102, 241, 0.2)",
+                    borderRadius: "12px",
                     color: "#e2e8f0",
+                    backdropFilter: "blur(20px)",
+                    boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
                   }}
                   formatter={(value: number) => [`$${(value ?? 0).toFixed(2)}`, "Cumulative P&L"]}
                   labelFormatter={(label: string) =>
@@ -256,7 +273,7 @@ export default function DashboardPage() {
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {bots.length === 0 ? (
                 <p className="text-sm text-surface-600 text-center py-6">
                   No bots yet. Create one from the Strategies page.
@@ -265,16 +282,21 @@ export default function DashboardPage() {
                 bots.map((bot: any) => (
                   <div
                     key={bot.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-surface-200/50 border border-surface-300"
+                    className="flex items-center justify-between p-3 rounded-lg bg-surface-200/50 border border-surface-300 card-glow transition-all duration-200 hover:bg-surface-200/80"
                   >
                     <div className="flex items-center gap-3">
-                      <div
-                        className={`w-2 h-2 rounded-full ${
-                          bot.status === "RUNNING"
-                            ? "bg-green-400 animate-pulse"
-                            : "bg-amber-400"
-                        }`}
-                      />
+                      <div className="relative">
+                        <div
+                          className={`w-2.5 h-2.5 rounded-full ${
+                            bot.status === "RUNNING"
+                              ? "bg-green-400"
+                              : "bg-amber-400"
+                          }`}
+                        />
+                        {bot.status === "RUNNING" && (
+                          <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-green-400 pulse-dot" />
+                        )}
+                      </div>
                       <div>
                         <p className="text-sm font-medium text-surface-900">
                           {bot.name}
@@ -321,7 +343,7 @@ export default function DashboardPage() {
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {notifications.length === 0 ? (
                 <p className="text-sm text-surface-600 text-center py-6">
                   No alerts yet.
@@ -330,10 +352,16 @@ export default function DashboardPage() {
                 notifications.map((notif: any) => (
                   <div
                     key={notif.id}
-                    className={`flex items-start gap-3 p-3 rounded-lg border ${
+                    className={`flex items-start gap-3 p-3 rounded-lg border transition-all duration-200 hover:translate-x-0.5 ${
                       notif.read
                         ? "bg-surface-200/30 border-surface-300"
                         : "bg-surface-200/50 border-brand-500/30"
+                    } ${
+                      notif.severity === "CRITICAL"
+                        ? "border-l-2 border-l-red-500"
+                        : notif.severity === "WARNING"
+                          ? "border-l-2 border-l-amber-500"
+                          : "border-l-2 border-l-brand-500"
                     }`}
                   >
                     <div

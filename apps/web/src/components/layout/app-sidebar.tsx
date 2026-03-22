@@ -64,7 +64,7 @@ export function AppSidebar({ open, onClose }: { open?: boolean; onClose?: () => 
       {/* Mobile overlay */}
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 md:hidden"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
           onClick={onClose}
         />
       )}
@@ -80,10 +80,11 @@ export function AppSidebar({ open, onClose }: { open?: boolean; onClose?: () => 
         )}
         data-open={open}
       >
-        {/* Logo + close button */}
-        <div className="h-16 flex items-center justify-between px-5 border-b border-surface-300">
-          <Link href="/app/dashboard" className="flex items-center gap-2" onClick={onClose}>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
+        {/* Logo + close button — with subtle gradient behind logo */}
+        <div className="relative h-16 flex items-center justify-between px-5 border-b border-surface-300 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-600/5 via-brand-500/3 to-transparent pointer-events-none" />
+          <Link href="/app/dashboard" className="relative flex items-center gap-2" onClick={onClose}>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 shadow-lg shadow-brand-600/20">
               <BarChart3 className="h-5 w-5 text-white" />
             </div>
             <span className="text-lg font-bold text-surface-900">
@@ -92,7 +93,7 @@ export function AppSidebar({ open, onClose }: { open?: boolean; onClose?: () => 
           </Link>
           <button
             onClick={onClose}
-            className="md:hidden p-1.5 rounded-lg text-surface-700 hover:bg-surface-200 transition-colors"
+            className="relative md:hidden p-1.5 rounded-lg text-surface-700 hover:bg-surface-200 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -108,20 +109,28 @@ export function AppSidebar({ open, onClose }: { open?: boolean; onClose?: () => 
                 href={item.href}
                 onClick={onClose}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
                   active
                     ? "bg-brand-600/10 text-brand-400"
                     : "text-surface-700 hover:bg-surface-200 hover:text-surface-900"
                 )}
               >
+                {active && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 rounded-r-full bg-brand-500" />
+                )}
                 <item.icon className="h-4 w-4" />
                 {item.label}
               </Link>
             );
           })}
 
+          {/* Divider */}
+          <div className="pt-3 pb-1">
+            <div className="h-px bg-gradient-to-r from-surface-300/50 via-surface-300 to-surface-300/50" />
+          </div>
+
           {/* Settings */}
-          <div className="pt-4">
+          <div className="pt-1">
             <button
               onClick={() => setSettingsOpen(!settingsOpen)}
               className="flex items-center justify-between w-full rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-200 transition-colors"
@@ -144,12 +153,15 @@ export function AppSidebar({ open, onClose }: { open?: boolean; onClose?: () => 
                       href={item.href}
                       onClick={onClose}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm transition-colors",
+                        "relative flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm transition-colors",
                         active
                           ? "text-brand-400"
                           : "text-surface-600 hover:text-surface-900"
                       )}
                     >
+                      {active && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-r-full bg-brand-500" />
+                      )}
                       {item.label}
                     </Link>
                   );
@@ -158,8 +170,13 @@ export function AppSidebar({ open, onClose }: { open?: boolean; onClose?: () => 
             )}
           </div>
 
+          {/* Divider */}
+          <div className="pt-1 pb-1">
+            <div className="h-px bg-gradient-to-r from-surface-300/50 via-surface-300 to-surface-300/50" />
+          </div>
+
           {/* Admin */}
-          <div className="pt-2">
+          <div className="pt-1">
             <button
               onClick={() => setAdminOpen(!adminOpen)}
               className="flex items-center justify-between w-full rounded-lg px-3 py-2 text-sm font-medium text-surface-700 hover:bg-surface-200 transition-colors"
@@ -182,12 +199,15 @@ export function AppSidebar({ open, onClose }: { open?: boolean; onClose?: () => 
                       href={item.href}
                       onClick={onClose}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm transition-colors",
+                        "relative flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm transition-colors",
                         active
                           ? "text-brand-400"
                           : "text-surface-600 hover:text-surface-900"
                       )}
                     >
+                      {active && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-r-full bg-brand-500" />
+                      )}
                       {item.label}
                     </Link>
                   );
@@ -199,7 +219,7 @@ export function AppSidebar({ open, onClose }: { open?: boolean; onClose?: () => 
 
         {/* Bottom */}
         <div className="p-4 border-t border-surface-300">
-          <div className="rounded-lg bg-surface-200 p-3">
+          <div className="rounded-lg bg-surface-200/80 border border-surface-300/50 p-3">
             <p className="text-xs font-medium text-surface-700">Paper Mode</p>
             <p className="text-xs text-surface-600 mt-0.5">
               All trades are simulated
@@ -209,7 +229,7 @@ export function AppSidebar({ open, onClose }: { open?: boolean; onClose?: () => 
       </aside>
 
       {/* Mobile bottom navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-surface-50 border-t border-surface-300 pb-[env(safe-area-inset-bottom)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-surface-50/90 backdrop-blur-xl border-t border-surface-300 pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-around h-14">
           {bottomNav.map((item) => {
             const active = pathname === item.href || pathname.startsWith(item.href + "/");

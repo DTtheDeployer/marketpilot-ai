@@ -186,9 +186,16 @@ export default function WeatherArbPage() {
           <div className="flex items-center gap-3 mb-1">
             <CloudSun className="h-7 w-7 text-brand-400" />
             <h1 className="text-2xl font-bold text-surface-900">Weather Arbitrage</h1>
-            <Badge variant={isRunning ? "success" : "muted"}>
-              {isRunning ? "Running" : "Stopped"}
-            </Badge>
+            {isRunning ? (
+              <span className="relative">
+                <Badge variant="success" className="relative z-10">
+                  Running
+                </Badge>
+                <span className="absolute inset-0 rounded-full bg-green-500/20 animate-pulse" />
+              </span>
+            ) : (
+              <Badge variant="muted">Stopped</Badge>
+            )}
           </div>
           <p className="text-surface-700">
             NOAA forecast confidence vs retail-priced Polymarket temperature buckets
@@ -229,23 +236,23 @@ export default function WeatherArbPage() {
         </div>
       )}
 
-      {/* Stats */}
+      {/* Stats — glass-card styled */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-4">
+        <div className="glass-card rounded-xl p-4 transition-all duration-300 hover:-translate-y-[1px] hover:shadow-lg hover:shadow-black/20">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-brand-500/10 p-2">
               <DollarSign className="h-5 w-5 text-brand-400" />
             </div>
             <div>
               <p className="text-xs text-surface-600">Bankroll</p>
-              <p className="text-xl font-bold text-surface-900">
+              <p className="text-xl font-bold text-surface-900 stat-value">
                 ${(status?.bankroll ?? 0).toFixed(2)}
               </p>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card className="p-4">
+        <div className="glass-card rounded-xl p-4 transition-all duration-300 hover:-translate-y-[1px] hover:shadow-lg hover:shadow-black/20">
           <div className="flex items-center gap-3">
             <div className={`rounded-lg p-2 ${(status?.daily_pnl ?? 0) >= 0 ? "bg-green-500/10" : "bg-red-500/10"}`}>
               {(status?.daily_pnl ?? 0) >= 0 ? (
@@ -256,40 +263,40 @@ export default function WeatherArbPage() {
             </div>
             <div>
               <p className="text-xs text-surface-600">Daily P&L</p>
-              <p className={`text-xl font-bold ${(status?.daily_pnl ?? 0) >= 0 ? "text-green-400" : "text-red-400"}`}>
+              <p className={`text-xl font-bold stat-value ${(status?.daily_pnl ?? 0) >= 0 ? "text-green-400" : "text-red-400"}`}>
                 {(status?.daily_pnl ?? 0) >= 0 ? "+" : ""}${(status?.daily_pnl ?? 0).toFixed(2)}
               </p>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card className="p-4">
+        <div className="glass-card rounded-xl p-4 transition-all duration-300 hover:-translate-y-[1px] hover:shadow-lg hover:shadow-black/20">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-blue-500/10 p-2">
               <Target className="h-5 w-5 text-blue-400" />
             </div>
             <div>
               <p className="text-xs text-surface-600">Open Positions</p>
-              <p className="text-xl font-bold text-surface-900">
+              <p className="text-xl font-bold text-surface-900 stat-value">
                 {status?.open_positions ?? positions.length} / 5
               </p>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Card className="p-4">
+        <div className="glass-card rounded-xl p-4 transition-all duration-300 hover:-translate-y-[1px] hover:shadow-lg hover:shadow-black/20">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-amber-500/10 p-2">
               <Activity className="h-5 w-5 text-amber-400" />
             </div>
             <div>
               <p className="text-xs text-surface-600">Win Rate</p>
-              <p className="text-xl font-bold text-surface-900">
+              <p className="text-xl font-bold text-surface-900 stat-value">
                 {(status?.win_rate ?? 0).toFixed(1)}%
               </p>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Strategy Parameters */}
@@ -300,38 +307,24 @@ export default function WeatherArbPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="rounded-lg bg-surface-200/50 border border-surface-300 p-3">
-              <p className="text-xs text-surface-600">Min Confidence</p>
-              <p className="text-sm font-semibold text-surface-900">85%</p>
-            </div>
-            <div className="rounded-lg bg-surface-200/50 border border-surface-300 p-3">
-              <p className="text-xs text-surface-600">Max Entry Price</p>
-              <p className="text-sm font-semibold text-surface-900">15¢</p>
-            </div>
-            <div className="rounded-lg bg-surface-200/50 border border-surface-300 p-3">
-              <p className="text-xs text-surface-600">Target Exit</p>
-              <p className="text-sm font-semibold text-surface-900">45¢ (3x)</p>
-            </div>
-            <div className="rounded-lg bg-surface-200/50 border border-surface-300 p-3">
-              <p className="text-xs text-surface-600">Scan Interval</p>
-              <p className="text-sm font-semibold text-surface-900">2 min</p>
-            </div>
-            <div className="rounded-lg bg-surface-200/50 border border-surface-300 p-3">
-              <p className="text-xs text-surface-600">Max Position</p>
-              <p className="text-sm font-semibold text-surface-900">$2.00</p>
-            </div>
-            <div className="rounded-lg bg-surface-200/50 border border-surface-300 p-3">
-              <p className="text-xs text-surface-600">Position Sizing</p>
-              <p className="text-sm font-semibold text-surface-900">Quarter Kelly</p>
-            </div>
-            <div className="rounded-lg bg-surface-200/50 border border-surface-300 p-3">
-              <p className="text-xs text-surface-600">Daily Loss Limit</p>
-              <p className="text-sm font-semibold text-surface-900">$50.00</p>
-            </div>
-            <div className="rounded-lg bg-surface-200/50 border border-surface-300 p-3">
-              <p className="text-xs text-surface-600">Cities</p>
-              <p className="text-sm font-semibold text-surface-900">6 metros</p>
-            </div>
+            {[
+              { label: "Min Confidence", value: "85%" },
+              { label: "Max Entry Price", value: "15\u00A2" },
+              { label: "Target Exit", value: "45\u00A2 (3x)" },
+              { label: "Scan Interval", value: "2 min" },
+              { label: "Max Position", value: "$2.00" },
+              { label: "Position Sizing", value: "Quarter Kelly" },
+              { label: "Daily Loss Limit", value: "$50.00" },
+              { label: "Cities", value: "6 metros" },
+            ].map((param) => (
+              <div
+                key={param.label}
+                className="rounded-lg bg-surface-200/50 border border-surface-300 p-3 transition-all duration-200 hover:bg-surface-200/80 hover:border-brand-500/20 hover:-translate-y-[0.5px]"
+              >
+                <p className="text-xs text-surface-600">{param.label}</p>
+                <p className="text-sm font-semibold text-surface-900">{param.value}</p>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -349,14 +342,20 @@ export default function WeatherArbPage() {
             <div className="text-center py-8 text-surface-600">
               <CloudSun className="h-10 w-10 mx-auto mb-3 text-surface-500" />
               <p>No signals yet</p>
-              <p className="text-xs mt-1">Click "Scan Now" to check for opportunities</p>
+              <p className="text-xs mt-1">Click &quot;Scan Now&quot; to check for opportunities</p>
             </div>
           ) : (
             <div className="space-y-3">
               {signals.slice(0, 10).map((signal, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between rounded-lg border border-surface-300 bg-surface-200/30 p-3"
+                  className={`flex items-center justify-between rounded-lg border bg-surface-200/30 p-3 transition-all duration-200 hover:bg-surface-200/60 ${
+                    signal.action === "BUY"
+                      ? "border-l-2 border-l-green-500 border-t-surface-300 border-r-surface-300 border-b-surface-300"
+                      : signal.action === "SELL"
+                        ? "border-l-2 border-l-red-500 border-t-surface-300 border-r-surface-300 border-b-surface-300"
+                        : "border-surface-300"
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <Badge variant={signal.action === "BUY" ? "success" : signal.action === "SELL" ? "danger" : "muted"}>
@@ -375,7 +374,7 @@ export default function WeatherArbPage() {
                       NOAA: {(signal.noaa_confidence * 100).toFixed(0)}%
                     </p>
                     <p className="text-xs text-surface-600">
-                      Market: {(signal.market_price * 100).toFixed(0)}¢ | EV: +${signal.expected_value.toFixed(2)}
+                      Market: {(signal.market_price * 100).toFixed(0)}&cent; | EV: +${signal.expected_value.toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -411,9 +410,9 @@ export default function WeatherArbPage() {
                 </thead>
                 <tbody className="divide-y divide-surface-300">
                   {positions.map((pos, i) => (
-                    <tr key={i} className="hover:bg-surface-200">
+                    <tr key={i} className="hover:bg-surface-200/50 transition-colors">
                       <td className="py-3 pr-4 text-surface-900 font-medium">{pos.market_id.slice(0, 12)}...</td>
-                      <td className="py-3 pr-4 text-surface-800">{(pos.entry_price * 100).toFixed(0)}¢</td>
+                      <td className="py-3 pr-4 text-surface-800">{(pos.entry_price * 100).toFixed(0)}&cent;</td>
                       <td className="py-3 pr-4 text-surface-800">${pos.size.toFixed(2)}</td>
                       <td className="py-3 text-surface-600 text-xs">{pos.entry_time}</td>
                     </tr>

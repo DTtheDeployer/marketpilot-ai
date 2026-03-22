@@ -1,10 +1,11 @@
+import type { ReactNode } from "react";
 import { cn } from "./cn";
 import { Card } from "./card";
 import type { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
   title: string;
-  value: string | number;
+  value: React.ReactNode;
   change?: string;
   changeType?: "positive" | "negative" | "neutral";
   icon?: LucideIcon;
@@ -20,11 +21,11 @@ export function StatCard({
   className,
 }: StatCardProps) {
   return (
-    <Card className={cn("p-5 card-hover", className)}>
+    <Card className={cn("p-5 card-hover border-l-2 border-l-brand-500/40", className)}>
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <p className="text-sm text-surface-700">{title}</p>
-          <p className="text-2xl font-bold text-surface-900">{value}</p>
+          <p className="text-2xl font-bold text-surface-900 stat-value">{value}</p>
           {change && (
             <p
               className={cn(
