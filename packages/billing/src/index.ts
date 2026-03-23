@@ -90,7 +90,7 @@ export function canAccessFeature(
   if (!plan) return false;
   const value = plan.limits[feature];
   if (typeof value === "boolean") return value;
-  if (typeof value === "number") return value !== 0;
+  if (typeof value === "number") return (value as number) !== 0;
   return false;
 }
 

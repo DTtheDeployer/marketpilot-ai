@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   Card,
   CardHeader,
@@ -19,8 +19,11 @@ import {
   Users,
   Bot,
   TrendingUp,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
-import { demoStrategies } from "@/lib/demo-data";
+import { api } from "@/lib/api-client";
+import { useApi } from "@/hooks/use-api";
 
 // ── Inline mock: usage stats per strategy ──────────────────────────────────
 const usageStats: Record<string, { activeBots: number; totalUsers: number; weeklyTrades: number }> = {
@@ -47,9 +50,11 @@ const tierVariant: Record<string, "muted" | "default" | "warning"> = {
 };
 
 export default function AdminStrategiesPage() {
-  const [activeMap, setActiveMap] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(demoStrategies.map((s) => [s.id, true]))
-  );
+  const fetchStrategies = useCallback(() => api.getStrategies(), []);
+  const { data: strategiesData, loading, error } = useApi<any>(fetchStrategies as any);
+  const strategies: any[] = (strategiesData as any)?.data ?? strategiesData ?? [];
+
+  const [activeMap, setActiveMap] = useState<Record<string, boolean>>({});
 
   const toggle = (id: string) => {
     setActiveMap((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -86,7 +91,7 @@ export default function AdminStrategiesPage() {
             <div>
               <p className="text-xs text-surface-600">Total Strategies</p>
               <p className="text-xl font-bold text-surface-900">
-                {demoStrategies.length}
+                {strategies.length}
               </p>
             </div>
           </div>
@@ -134,7 +139,7 @@ export default function AdminStrategiesPage() {
 
       {/* ── Strategy list ───────────────────────────────────────────────── */}
       <div className="space-y-4">
-        {demoStrategies.map((strat) => {
+        {strategies.map((strat) => {
           const stats = usageStats[strat.id];
           const isActive = activeMap[strat.id];
 
@@ -170,7 +175,7 @@ export default function AdminStrategiesPage() {
                     {strat.description}
                   </p>
                   <div className="flex flex-wrap gap-1.5 pt-1">
-                    {strat.tags.map((tag) => (
+                    {(strat.tags || []).map((tag: string) => (
                       <span
                         key={tag}
                         className="rounded-md bg-surface-200 px-2 py-0.5 text-xs text-surface-600"

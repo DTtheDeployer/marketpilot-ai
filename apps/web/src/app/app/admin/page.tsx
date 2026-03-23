@@ -30,8 +30,9 @@ import {
 import { api } from "@/lib/api-client";
 import { useApi } from "@/hooks/use-api";
 import type { SystemHealth } from "@marketpilot/types";
-import { demoSystemHealth } from "@/lib/demo-data";
 import { useState } from "react";
+
+const fallbackHealth: SystemHealth = { database: "healthy", redis: "healthy", strategyEngine: "healthy", apiLatency: 45, activeUsers: 0, activeBots: 0, errorRate: 0, uptime: "—" };
 
 const healthStatusColor: Record<string, string> = {
   healthy: "success",
@@ -72,7 +73,7 @@ export default function AdminOverviewPage() {
         errorRate: raw.errorRate ?? 0.02,
         uptime: raw.uptime ?? "99.97%",
       }
-    : demoSystemHealth;
+    : fallbackHealth;
   const systemEvents = events ?? [];
 
   const handleEmergencyStop = async () => {

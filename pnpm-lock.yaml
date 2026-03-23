@@ -101,6 +101,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^3.9.0
         version: 3.10.0(react-hook-form@7.71.2(react@19.2.4))
+      '@marketpilot/billing':
+        specifier: workspace:*
+        version: link:../../packages/billing
       '@marketpilot/database':
         specifier: workspace:*
         version: link:../../packages/database

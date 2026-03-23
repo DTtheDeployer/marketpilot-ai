@@ -13,7 +13,7 @@ import {
   cn,
 } from "@marketpilot/ui";
 import { Check, ArrowRight, AlertTriangle } from "lucide-react";
-import { demoPlans } from "@/lib/demo-data";
+import { PLANS } from "@marketpilot/billing";
 
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
@@ -82,7 +82,7 @@ export default function PricingPage() {
       <section className="pb-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-            {demoPlans.map((plan) => {
+            {Object.values(PLANS).map((plan) => {
               const isPopular = plan.tier === "PRO";
               const price = annual ? plan.priceYearly / 12 : plan.priceMonthly;
               const rawYearly = plan.priceYearly;

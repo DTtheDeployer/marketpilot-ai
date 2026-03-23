@@ -1,8 +1,9 @@
 [build]
-builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
+builder = "NIXPACKS"
+buildCommand = "npx pnpm install && npx pnpm --filter @marketpilot/database db:generate"
 
 [deploy]
+startCommand = "cd apps/api && npx tsx src/index.ts"
 healthcheckPath = "/health"
 healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"

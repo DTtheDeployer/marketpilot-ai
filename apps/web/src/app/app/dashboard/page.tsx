@@ -37,6 +37,7 @@ import { api } from "@/lib/api-client";
 import { useApi } from "@/hooks/use-api";
 import { useAuthStore } from "@/stores/auth-store";
 import { useAccount } from "wagmi";
+// Fallback demo data for new users with no bot activity
 import {
   demoDashboardStats,
   demoPnlData,

@@ -19,9 +19,31 @@ import { api, ApiError } from "@/lib/api-client";
 
 export default function SignupPage() {
   return (
-    <Suspense fallback={<div className="text-surface-700 text-center p-8">Loading...</div>}>
+    <Suspense fallback={<SignupSkeleton />}>
       <SignupForm />
     </Suspense>
+  );
+}
+
+function SignupSkeleton() {
+  return (
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6">
+        <div className="text-center">
+          <div className="h-8 w-48 mx-auto bg-surface-300 rounded animate-pulse" />
+          <div className="h-4 w-64 mx-auto mt-2 bg-surface-300 rounded animate-pulse" />
+        </div>
+        <div className="bg-surface-100 border border-surface-300 rounded-xl p-6 space-y-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="space-y-1.5">
+              <div className="h-4 w-20 bg-surface-300 rounded animate-pulse" />
+              <div className="h-10 w-full bg-surface-200 rounded-lg animate-pulse" />
+            </div>
+          ))}
+          <div className="h-10 w-full bg-brand-600/50 rounded-lg animate-pulse mt-4" />
+        </div>
+      </div>
+    </div>
   );
 }
 

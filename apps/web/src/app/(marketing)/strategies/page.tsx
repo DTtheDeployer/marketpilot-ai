@@ -22,6 +22,7 @@ import {
   TrendingUp,
   Star,
 } from "lucide-react";
+// Fallback demo data — marketing page uses static strategy metadata for SEO/SSR
 import { demoStrategies } from "@/lib/demo-data";
 
 const riskLabels: Record<number, { label: string; variant: "success" | "warning" | "danger" }> = {
