@@ -16,26 +16,29 @@ botsRouter.get("/", requireAuth, async (req: AuthenticatedRequest, res, next) =>
       include: {
         strategy: { select: { name: true, slug: true, category: true } },
         _count: { select: { orders: true, positions: true } },
-        pnlSnapshots: { orderBy: { timestamp: "desc" }, take: 1 },
       },
       orderBy: { createdAt: "desc" },
     });
 
-    // Enrich with computed P&L fields
-    const enriched = bots.map((bot) => {
-      const latestPnl = bot.pnlSnapshots[0];
-      const totalPnl = latestPnl?.cumPnl ?? 0;
-      const pnlPercent = bot.capitalAllocated > 0
-        ? Math.round((totalPnl / bot.capitalAllocated) * 10000) / 100
-        : 0;
-      return {
-        ...bot,
-        pnl: Math.round(totalPnl * 100) / 100,
-        pnlPercent,
-        tradesCount: bot._count.orders,
-        pnlSnapshots: undefined, // Don't send full array
-      };
-    });
+    // Compute P&L by aggregating all snapshots for each bot
+    const enriched = await Promise.all(
+      bots.map(async (bot) => {
+        const pnlAgg = await prisma.pnlSnapshot.aggregate({
+          where: { botId: bot.id },
+          _sum: { pnl: true },
+        });
+        const totalPnl = pnlAgg._sum.pnl ?? 0;
+        const pnlPercent = bot.capitalAllocated > 0
+          ? Math.round((totalPnl / bot.capitalAllocated) * 10000) / 100
+          : 0;
+        return {
+          ...bot,
+          pnl: Math.round(totalPnl * 100) / 100,
+          pnlPercent,
+          tradesCount: bot._count.orders,
+        };
+      })
+    );
 
     res.json({ success: true, data: enriched });
   } catch (error) {
