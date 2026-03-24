@@ -106,6 +106,7 @@ class BacktestResult(BaseModel):
     equity_curve: list[float] = Field(default_factory=list)
     trades: list[dict[str, Any]] = Field(default_factory=list)
     duration_seconds: float = 0.0
+    execution_analysis: Optional[dict[str, Any]] = None
 
 
 class RiskLimits(BaseModel):

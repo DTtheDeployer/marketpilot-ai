@@ -452,6 +452,7 @@ model Bot {
   orders     Order[]
   positions  Position[]
   pnlSnapshots PnlSnapshot[]
+  tradeAnalyses TradeAnalysis[]
 
   @@index([userId])
   @@index([status])
@@ -597,6 +598,7 @@ model Order {
 
   fills          Fill[]
   executionLogs  ExecutionLog[]
+  tradeAnalysis  TradeAnalysis?
 
   @@index([userId])
   @@index([botId])
@@ -652,6 +654,47 @@ model PnlSnapshot {
   timestamp DateTime @default(now())
 
   @@index([botId, timestamp])
+}
+
+model TradeAnalysis {
+  id              String   @id @default(cuid())
+  orderId         String   @unique
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  botId           String?
+  bot             Bot?     @relation(fields: [botId], references: [id])
+
+  // Execution quality
+  slippageBps     Float    @default(0)
+  slippageCost    Float    @default(0)
+  spreadCost      Float    @default(0)
+  feeCost         Float    @default(0)
+  feeType         String   @default("taker")
+  totalExecCost   Float    @default(0)
+
+  // Fill quality
+  fillRate        Float    @default(1)
+  isPartial       Boolean  @default(false)
+  tranchesCount   Int      @default(1)
+  vwap            Float    @default(0)
+  worstFillPrice  Float    @default(0)
+  bestFillPrice   Float    @default(0)
+
+  // Latency
+  simulatedLatencyMs Float @default(0)
+
+  // Realism
+  idealPnl        Float    @default(0)
+  realisticPnl    Float    @default(0)
+  realismDragPct  Float    @default(0)
+
+  // Rejection
+  wasRejected     Boolean  @default(false)
+  rejectionReason String?
+
+  createdAt       DateTime @default(now())
+
+  @@index([botId])
+  @@index([orderId])
 }
 
 model ExecutionLog {

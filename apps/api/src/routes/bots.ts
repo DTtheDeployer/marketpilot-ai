@@ -254,6 +254,161 @@ botsRouter.delete("/:id", requireAuth, async (req: AuthenticatedRequest, res, ne
   }
 });
 
+// ── Bot Trade Analysis ────────────────────────────────────────────────────────
+botsRouter.get("/:id/analysis", requireAuth, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const bot = await prisma.bot.findFirst({
+      where: { id: req.params.id, userId: req.userId! },
+    });
+
+    if (!bot) throw new AppError(404, "NOT_FOUND", "Bot not found");
+
+    const analyses = await prisma.tradeAnalysis.findMany({
+      where: { botId: bot.id },
+    });
+
+    if (analyses.length === 0) {
+      res.json({
+        success: true,
+        data: {
+          total_trades: 0,
+          feedback: ["No trades yet. Start the bot to begin collecting execution analysis."],
+        },
+      });
+      return;
+    }
+
+    const fills = analyses.filter((a) => !a.wasRejected);
+    const rejections = analyses.filter((a) => a.wasRejected);
+    const partials = fills.filter((a) => a.isPartial);
+    const makers = fills.filter((a) => a.feeType === "maker");
+
+    const avgSlippage = fills.length > 0
+      ? fills.reduce((s, a) => s + a.slippageBps, 0) / fills.length
+      : 0;
+    const totalSlippageCost = fills.reduce((s, a) => s + a.slippageCost, 0);
+    const totalSpreadCost = fills.reduce((s, a) => s + a.spreadCost, 0);
+    const totalFeeCost = fills.reduce((s, a) => s + a.feeCost, 0);
+    const totalExecCost = fills.reduce((s, a) => s + a.totalExecCost, 0);
+    const avgFillRate = fills.length > 0
+      ? fills.reduce((s, a) => s + a.fillRate, 0) / fills.length
+      : 0;
+    const avgLatency = fills.length > 0
+      ? fills.reduce((s, a) => s + a.simulatedLatencyMs, 0) / fills.length
+      : 0;
+    const idealPnl = fills.reduce((s, a) => s + a.idealPnl, 0);
+    const realisticPnl = fills.reduce((s, a) => s + a.realisticPnl, 0);
+    const drag = Math.abs(idealPnl) > 0.001
+      ? ((idealPnl - realisticPnl) / Math.abs(idealPnl)) * 100
+      : 0;
+
+    // Execution quality score (0-100)
+    let score = 100;
+    if (avgSlippage > 5) score -= (avgSlippage - 5) * 2;
+    score -= (1 - avgFillRate) * 30;
+    if (analyses.length > 0) score -= (rejections.length / analyses.length) * 300;
+    if (fills.length > 0) score -= (partials.length / fills.length) * 100;
+    if (avgLatency > 300) score -= (avgLatency - 300) / 100;
+    score = Math.max(0, Math.min(100, score));
+
+    // Generate feedback
+    const feedback: string[] = [];
+
+    if (avgSlippage > 15) {
+      feedback.push(`High average slippage of ${avgSlippage.toFixed(1)}bps. Consider using limit orders or smaller sizes.`);
+    } else if (avgSlippage > 8) {
+      feedback.push(`Moderate slippage of ${avgSlippage.toFixed(1)}bps. More maker orders could reduce costs.`);
+    }
+
+    if (avgFillRate < 0.80) {
+      feedback.push(`Only ${(avgFillRate * 100).toFixed(0)}% fill rate. Target more liquid markets or reduce sizes.`);
+    }
+
+    if (fills.length > 0 && partials.length / fills.length > 0.2) {
+      feedback.push(`${((partials.length / fills.length) * 100).toFixed(0)}% partial fills — order sizes may be too large for available liquidity.`);
+    }
+
+    if (analyses.length > 0 && rejections.length / analyses.length > 0.1) {
+      feedback.push(`${((rejections.length / analyses.length) * 100).toFixed(0)}% rejection rate. Add liquidity checks before submission.`);
+    }
+
+    if (drag > 5) {
+      feedback.push(`Execution costs dragging returns by ${drag.toFixed(1)}%. Breakdown: slippage $${totalSlippageCost.toFixed(2)}, spread $${totalSpreadCost.toFixed(2)}, fees $${totalFeeCost.toFixed(2)}.`);
+    }
+
+    if (idealPnl > 0 && realisticPnl < 0) {
+      feedback.push(`WARNING: Profitable before costs ($${idealPnl.toFixed(2)}) but unprofitable after ($${realisticPnl.toFixed(2)}). Would lose money live.`);
+    }
+
+    if (score >= 85) feedback.push(`Execution quality: ${score.toFixed(0)}/100 — Excellent. Ready for live trading.`);
+    else if (score >= 65) feedback.push(`Execution quality: ${score.toFixed(0)}/100 — Good. Some optimisation recommended.`);
+    else if (score >= 40) feedback.push(`Execution quality: ${score.toFixed(0)}/100 — Fair. Address execution issues before going live.`);
+    else feedback.push(`Execution quality: ${score.toFixed(0)}/100 — Poor. Fundamental changes needed.`);
+
+    feedback.push(`P&L comparison — Ideal: $${idealPnl.toFixed(2)} vs Realistic: $${realisticPnl.toFixed(2)} (costs: $${totalExecCost.toFixed(2)}).`);
+
+    res.json({
+      success: true,
+      data: {
+        total_trades: analyses.length,
+        total_fills: fills.length,
+        total_rejections: rejections.length,
+        partial_fill_count: partials.length,
+        avg_slippage_bps: Math.round(avgSlippage * 100) / 100,
+        total_slippage_cost: Math.round(totalSlippageCost * 100) / 100,
+        total_spread_cost: Math.round(totalSpreadCost * 100) / 100,
+        total_fee_cost: Math.round(totalFeeCost * 100) / 100,
+        total_execution_cost: Math.round(totalExecCost * 100) / 100,
+        maker_fill_pct: fills.length > 0 ? Math.round((makers.length / fills.length) * 1000) / 10 : 0,
+        avg_fill_rate: Math.round(avgFillRate * 10000) / 10000,
+        avg_latency_ms: Math.round(avgLatency * 10) / 10,
+        ideal_total_pnl: Math.round(idealPnl * 100) / 100,
+        realistic_total_pnl: Math.round(realisticPnl * 100) / 100,
+        realism_drag_pct: Math.round(drag * 100) / 100,
+        execution_quality_score: Math.round(score * 10) / 10,
+        feedback,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+botsRouter.get("/:id/analysis/trades", requireAuth, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const bot = await prisma.bot.findFirst({
+      where: { id: req.params.id, userId: req.userId! },
+    });
+
+    if (!bot) throw new AppError(404, "NOT_FOUND", "Bot not found");
+
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const [analyses, total] = await Promise.all([
+      prisma.tradeAnalysis.findMany({
+        where: { botId: bot.id },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          order: { select: { side: true, price: true, size: true, marketId: true, createdAt: true } },
+        },
+      }),
+      prisma.tradeAnalysis.count({ where: { botId: bot.id } }),
+    ]);
+
+    res.json({
+      success: true,
+      data: analyses,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ── Bot Events ───────────────────────────────────────────────────────────────
 botsRouter.get("/:id/events", requireAuth, async (req: AuthenticatedRequest, res, next) => {
   try {

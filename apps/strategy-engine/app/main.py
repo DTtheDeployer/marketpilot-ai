@@ -41,10 +41,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS
+# CORS — allow all localhost ports in development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
+    allow_origin_regex=r"^https?://localhost(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

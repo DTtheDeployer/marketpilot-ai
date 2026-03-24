@@ -406,27 +406,133 @@ async function validateSignalWithRiskEngine(
 }
 
 async function executePaperOrder(orderId: string, signal: StrategySignal): Promise<void> {
-  const slippageBps = Math.random() * 10;
-  const slippageMultiplier = signal.side === "BUY" ? 1 + slippageBps / 10000 : 1 - slippageBps / 10000;
-  const fillPrice = signal.price * slippageMultiplier;
-
-  // Simulate P&L: random outcome based on confidence
-  const confidence = signal.confidence ?? 0.5;
-  const win = Math.random() < (0.4 + confidence * 0.3); // higher confidence = higher win rate
-  const pnlAmount = win
-    ? fillPrice * signal.size * (0.02 + Math.random() * 0.08) // 2-10% profit
-    : -(fillPrice * signal.size * (0.01 + Math.random() * 0.05)); // 1-6% loss
-
   // Get the order to find botId and userId
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) return;
+
+  // Call the enhanced paper execution endpoint on the strategy engine
+  // This uses realistic orderbook walking, dynamic fees, latency, and rejection simulation
+  const enhancedUrl = `${STRATEGY_ENGINE_URL}/paper/execute-enhanced`;
+
+  // Build market context for realistic simulation
+  const midpoint = signal.price;
+  const liquidity = 100_000 + Math.random() * 500_000;
+  const spread = 0.01 + Math.random() * 0.03;
+
+  let fillPrice = signal.price;
+  let fillSize = signal.size;
+  let fee = signal.price * signal.size * 0.001;
+  let slippageBps = 0;
+  let pnlAmount = 0;
+  let realisticPnl = 0;
+  let win = false;
+  let simulatedLatencyMs = 0;
+  let isPartial = false;
+  let wasRejected = false;
+  let rejectionReason: string | null = null;
+  let analysisData: Record<string, unknown> = {};
+
+  try {
+    const enhancedResponse = await fetch(enhancedUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        side: signal.side,
+        price: signal.price,
+        size: signal.size,
+        market_id: signal.marketId,
+        midpoint,
+        liquidity,
+        spread,
+        confidence: signal.confidence ?? 0.5,
+      }),
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (enhancedResponse.ok) {
+      const result = (await enhancedResponse.json()) as Record<string, unknown>;
+
+      wasRejected = result.status === "rejected";
+      fillPrice = Number(result.fill_price) || signal.price;
+      fillSize = Number(result.fill_size) || signal.size;
+      fee = Number(result.fee) || 0;
+      slippageBps = Number(result.slippage_bps) || 0;
+      pnlAmount = Number(result.pnl) || 0;
+      realisticPnl = Number(result.realistic_pnl) || pnlAmount;
+      win = Boolean(result.win);
+      simulatedLatencyMs = Number(result.simulated_latency_ms) || 0;
+      isPartial = Boolean(result.is_partial);
+      rejectionReason = wasRejected ? String(result.rejection_reason || "unknown") : null;
+      analysisData = (result.analysis as Record<string, unknown>) || {};
+    } else {
+      // Fallback to basic simulation if enhanced endpoint fails
+      logger.warn(`Enhanced paper execution returned ${enhancedResponse.status}, using fallback`);
+      const confidence = signal.confidence ?? 0.5;
+      slippageBps = Math.random() * 10;
+      const slippageMultiplier = signal.side === "BUY" ? 1 + slippageBps / 10000 : 1 - slippageBps / 10000;
+      fillPrice = signal.price * slippageMultiplier;
+      win = Math.random() < (0.4 + confidence * 0.3);
+      pnlAmount = win
+        ? fillPrice * signal.size * (0.02 + Math.random() * 0.08)
+        : -(fillPrice * signal.size * (0.01 + Math.random() * 0.05));
+      realisticPnl = pnlAmount;
+    }
+  } catch (err) {
+    // Fallback to basic simulation
+    logger.warn(`Enhanced paper execution failed, using fallback: ${err instanceof Error ? err.message : String(err)}`);
+    const confidence = signal.confidence ?? 0.5;
+    slippageBps = Math.random() * 10;
+    const slippageMultiplier = signal.side === "BUY" ? 1 + slippageBps / 10000 : 1 - slippageBps / 10000;
+    fillPrice = signal.price * slippageMultiplier;
+    win = Math.random() < (0.4 + confidence * 0.3);
+    pnlAmount = win
+      ? fillPrice * signal.size * (0.02 + Math.random() * 0.08)
+      : -(fillPrice * signal.size * (0.01 + Math.random() * 0.05));
+    realisticPnl = pnlAmount;
+  }
+
+  // If rejected, mark order as rejected and skip fill creation
+  if (wasRejected) {
+    await prisma.$transaction([
+      prisma.order.update({
+        where: { id: orderId },
+        data: { status: "REJECTED" },
+      }),
+      prisma.executionLog.create({
+        data: {
+          orderId,
+          action: "PAPER_REJECTED",
+          details: JSON.parse(JSON.stringify({ rejectionReason, slippageBps, analysisData })),
+          success: false,
+          error: rejectionReason,
+          latencyMs: Math.round(simulatedLatencyMs),
+        },
+      }),
+      // Store analysis even for rejections
+      ...(order.botId ? [
+        prisma.tradeAnalysis.create({
+          data: {
+            orderId,
+            botId: order.botId,
+            wasRejected: true,
+            rejectionReason,
+          },
+        }),
+      ] : []),
+    ]);
+    return;
+  }
+
+  // Use realistic P&L (after execution costs) instead of ideal P&L
+  const effectivePnl = realisticPnl;
+  const orderStatus = isPartial ? "PARTIALLY_FILLED" : "FILLED";
 
   await prisma.$transaction([
     prisma.order.update({
       where: { id: orderId },
       data: {
-        status: "FILLED",
-        filledSize: signal.size,
+        status: orderStatus,
+        filledSize: fillSize,
         avgFillPrice: fillPrice,
       },
     }),
@@ -434,27 +540,63 @@ async function executePaperOrder(orderId: string, signal: StrategySignal): Promi
       data: {
         orderId,
         price: fillPrice,
-        size: signal.size,
-        fee: fillPrice * signal.size * 0.001, // 0.1% fee
+        size: fillSize,
+        fee,
       },
     }),
     prisma.executionLog.create({
       data: {
         orderId,
         action: "PAPER_FILL",
-        details: { fillPrice, slippageBps, pnl: pnlAmount, win },
+        details: JSON.parse(JSON.stringify({
+          fillPrice,
+          slippageBps,
+          fee,
+          pnl: pnlAmount,
+          realisticPnl,
+          win,
+          isPartial,
+          simulatedLatencyMs,
+          analysisData,
+        })),
         success: true,
-        latencyMs: 0,
+        latencyMs: Math.round(simulatedLatencyMs),
       },
     }),
-    // Create PnL snapshot per trade
+    // Create PnL snapshot with realistic P&L
     ...(order.botId ? [
       prisma.pnlSnapshot.create({
         data: {
           botId: order.botId,
-          pnl: pnlAmount,
+          pnl: effectivePnl,
           cumPnl: 0, // Will be recalculated
-          drawdown: pnlAmount < 0 ? pnlAmount : 0,
+          drawdown: effectivePnl < 0 ? effectivePnl : 0,
+        },
+      }),
+    ] : []),
+    // Store per-trade analysis
+    ...(order.botId ? [
+      prisma.tradeAnalysis.create({
+        data: {
+          orderId,
+          botId: order.botId,
+          slippageBps: Number(analysisData.slippage_bps) || slippageBps,
+          slippageCost: Number(analysisData.slippage_cost_usd) || 0,
+          spreadCost: Number(analysisData.spread_cost_usd) || 0,
+          feeCost: Number(analysisData.fee_cost_usd) || fee,
+          feeType: String(analysisData.fee_type || "taker"),
+          totalExecCost: Number(analysisData.total_execution_cost_usd) || fee,
+          fillRate: Number(analysisData.fill_rate) || 1,
+          isPartial,
+          tranchesCount: Number(analysisData.tranches_count) || 1,
+          vwap: fillPrice,
+          worstFillPrice: Number(analysisData.worst_fill_price) || fillPrice,
+          bestFillPrice: Number(analysisData.best_fill_price) || fillPrice,
+          simulatedLatencyMs: simulatedLatencyMs,
+          idealPnl: Number(analysisData.ideal_pnl) || pnlAmount,
+          realisticPnl: realisticPnl,
+          realismDragPct: Number(analysisData.realism_drag_pct) || 0,
+          wasRejected: false,
         },
       }),
     ] : []),

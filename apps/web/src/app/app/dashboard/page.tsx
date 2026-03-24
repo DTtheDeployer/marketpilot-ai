@@ -17,22 +17,14 @@ import {
   BarChart3,
   TrendingUp,
   Bell,
-  ArrowUpRight,
-  ArrowDownRight,
   Pause,
   Play,
-  Loader2,
   AlertCircle,
 } from "lucide-react";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { EquityCurve } from "@/components/charts/performance/EquityCurve";
+import { PnLBars } from "@/components/charts/performance/PnLBars";
+import { WinRateGauge } from "@/components/charts/performance/WinRateGauge";
+import { LivePnLTicker } from "@/components/charts/realtime/LivePnLTicker";
 import { api } from "@/lib/api-client";
 import { useApi } from "@/hooks/use-api";
 import { useAuthStore } from "@/stores/auth-store";
@@ -105,6 +97,18 @@ export default function DashboardPage() {
   }, [botsData]);
 
   const pnlData = demoPnlData;
+
+  // Transform cumulative P&L into equity curve (bankroll over time)
+  const startingBankroll = stats.capitalDeployed || 5000;
+  const equityData = useMemo(
+    () =>
+      pnlData.map((d) => ({
+        date: d.date,
+        bankroll: Math.round((startingBankroll + d.cumulative) * 100) / 100,
+        pnl: d.pnl,
+      })),
+    [pnlData, startingBankroll]
+  );
 
   const loading = botsLoading && alertsLoading;
 
@@ -247,70 +251,40 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* P&L Chart */}
-      <Card className="overflow-hidden">
-        <CardHeader>
-          <CardTitle>Cumulative P&L — Last 30 Days</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative h-72">
-            {/* Gradient background fade for chart area */}
-            <div className="absolute inset-0 bg-gradient-to-b from-brand-500/[0.02] to-transparent rounded-lg pointer-events-none" />
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={pnlData}>
-                <defs>
-                  <linearGradient id="pnlGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis
-                  dataKey="date"
-                  stroke="#64748b"
-                  fontSize={12}
-                  tickFormatter={(v: string) =>
-                    new Date(v).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })
-                  }
-                />
-                <YAxis
-                  stroke="#64748b"
-                  fontSize={12}
-                  tickFormatter={(v: number) => `$${v}`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(15, 23, 42, 0.95)",
-                    border: "1px solid rgba(99, 102, 241, 0.2)",
-                    borderRadius: "12px",
-                    color: "#e2e8f0",
-                    backdropFilter: "blur(20px)",
-                    boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
-                  }}
-                  formatter={(value: number) => [`$${(value ?? 0).toFixed(2)}`, "Cumulative P&L"]}
-                  labelFormatter={(label: string) =>
-                    new Date(label).toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })
-                  }
-                />
-                <Area
-                  type="monotone"
-                  dataKey="cumulative"
-                  stroke="#6366f1"
-                  strokeWidth={2}
-                  fill="url(#pnlGradient)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Main Charts — Responsive Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Hero Chart — Full width on mobile, 2 cols on desktop */}
+        <div className="lg:col-span-2">
+          <EquityCurve
+            data={equityData}
+            startingBankroll={stats.capitalDeployed || 5000}
+            height="lg"
+          />
+        </div>
+
+        {/* Win Rate — Sidebar on desktop */}
+        <div className="lg:col-span-1 flex items-center justify-center">
+          <WinRateGauge
+            winRate={stats.winRate}
+            wins={Math.round(stats.totalTrades * (stats.winRate / 100))}
+            losses={Math.round(stats.totalTrades * (1 - stats.winRate / 100))}
+          />
+        </div>
+      </div>
+
+      {/* Secondary Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <PnLBars data={pnlData} />
+        <Card className="overflow-hidden">
+          <CardContent className="p-4 md:p-6">
+            <LivePnLTicker
+              currentPnL={stats.totalPnl}
+              label="All-Time P&L"
+              size="lg"
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Active Bots */}

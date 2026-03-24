@@ -28,6 +28,14 @@ from py_clob_client.clob_types import (
 from py_clob_client.constants import POLYGON
 
 from app.models.strategy import TradeIntent
+from app.paper_execution.analysis import TradeAnalysisMetrics, compute_trade_analysis
+from app.paper_execution.fill_models import (
+    compute_fee,
+    generate_synthetic_orderbook,
+    should_reject_fill,
+    simulate_fill_latency,
+    walk_orderbook,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +56,14 @@ class ExecutionResult:
     filled_price: float = 0.0
     error: Optional[str] = None
     raw_response: Optional[dict] = None
+    # Enhanced fields for paper trading analysis
+    slippage_bps: float = 0.0
+    fee: float = 0.0
+    fee_type: str = "taker"
+    simulated_latency_ms: float = 0.0
+    is_partial: bool = False
+    tranches: list[dict] = field(default_factory=list)
+    analysis: Optional[dict] = None
 
 
 # ── Live Executor ───────────────────────────────────────────────────────────
@@ -422,16 +438,16 @@ class GammaClient:
 class PaperExecutor:
     """
     Paper trading executor that mirrors PolymarketExecutor's interface.
-    Used for all non-Operator users. Simulates fills locally and reports
-    results to the internal API for tracking.
+    Used for all non-Operator users. Simulates fills with realistic
+    orderbook walking, dynamic fees, latency, and rejection modelling.
     """
-
-    SLIPPAGE_BPS = 50  # 0.5% slippage on market orders
 
     def __init__(self):
         self._open_orders: list[dict] = []
         self._order_counter = 0
         self._initialized = True  # Always ready
+        self._cumulative_volume: float = 0.0
+        self._trade_analyses: list[dict] = []
 
     def initialize(self) -> None:
         """No-op — paper executor is always ready."""
@@ -462,14 +478,20 @@ class PaperExecutor:
         size: float,
         order_type: str = "GTC",
         neg_risk: bool = False,
+        midpoint: float | None = None,
+        liquidity: float = 100_000,
+        spread: float = 0.02,
     ) -> ExecutionResult:
         order_id = self._next_order_id()
+        mid = midpoint if midpoint is not None else price
 
         # FOK/FAK = immediate fill or reject (simulate market order)
         if order_type in ("FOK", "FAK"):
-            return self._simulate_immediate_fill(order_id, token_id, side, price, size)
+            return self._simulate_realistic_fill(
+                order_id, token_id, side, price, size, mid, liquidity, spread, is_maker=False
+            )
 
-        # GTC/GTD = resting limit order (queue it)
+        # GTC/GTD = resting limit order
         order = {
             "order_id": order_id,
             "token_id": token_id,
@@ -484,11 +506,11 @@ class PaperExecutor:
 
         logger.info(f"[PAPER] Limit order queued: {side} {size}@{price} id={order_id}")
 
-        # Simulate: limit orders within 5% of price fill immediately
-        # (simplification for paper trading UX)
-        mid_estimate = price
-        if abs(mid_estimate - price) / max(price, 0.01) < 0.05:
-            return self._simulate_immediate_fill(order_id, token_id, side, price, size)
+        # Simulate: limit orders near midpoint fill immediately
+        if abs(mid - price) / max(price, 0.01) < 0.05:
+            return self._simulate_realistic_fill(
+                order_id, token_id, side, price, size, mid, liquidity, spread, is_maker=True
+            )
 
         return ExecutionResult(
             success=True,
@@ -503,17 +525,14 @@ class PaperExecutor:
         side: str,
         size: float,
         neg_risk: bool = False,
+        midpoint: float | None = None,
+        liquidity: float = 100_000,
+        spread: float = 0.02,
     ) -> ExecutionResult:
-        # Simulate market price with slippage
-        base_price = 0.50  # Default mid
-        slippage = self.SLIPPAGE_BPS / 10000
-        if side == "BUY":
-            fill_price = round(base_price * (1 + slippage), 4)
-        else:
-            fill_price = round(base_price * (1 - slippage), 4)
-
-        return self._simulate_immediate_fill(
-            self._next_order_id(), token_id, side, fill_price, size
+        mid = midpoint if midpoint is not None else 0.50
+        return self._simulate_realistic_fill(
+            self._next_order_id(), token_id, side, mid, size,
+            mid, liquidity, spread, is_maker=False,
         )
 
     def execute_trade_intent(
@@ -527,25 +546,141 @@ class PaperExecutor:
             price=intent.price, size=intent.size, neg_risk=neg_risk,
         )
 
-    def _simulate_immediate_fill(
-        self, order_id: str, token_id: str, side: str, price: float, size: float
+    def _simulate_realistic_fill(
+        self,
+        order_id: str,
+        token_id: str,
+        side: str,
+        price: float,
+        size: float,
+        midpoint: float,
+        liquidity: float,
+        spread: float,
+        is_maker: bool,
     ) -> ExecutionResult:
-        """Simulate an immediate fill with small slippage."""
-        slippage = self.SLIPPAGE_BPS / 10000
-        if side == "BUY":
-            fill_price = round(price * (1 + slippage), 4)
-        else:
-            fill_price = round(price * (1 - slippage), 4)
+        """Simulate a fill using realistic orderbook walking and fee models."""
 
-        logger.info(f"[PAPER] Filled: {side} {size}@{fill_price} id={order_id}")
+        # 1. Check for rejection
+        rejected, rejection_reason = should_reject_fill(liquidity, spread)
+        if rejected:
+            logger.info(f"[PAPER] Order rejected: {rejection_reason} id={order_id}")
 
+            analysis = {
+                "was_rejected": True,
+                "rejection_reason": rejection_reason,
+                "slippage_bps": 0,
+                "fee_cost_usd": 0,
+                "simulated_latency_ms": 0,
+            }
+            self._trade_analyses.append(analysis)
+
+            return ExecutionResult(
+                success=False,
+                order_id=order_id,
+                error=f"Rejected: {rejection_reason}",
+                analysis=analysis,
+            )
+
+        # 2. Generate synthetic orderbook and walk it
+        liquidity_factor = max(0.3, liquidity / 100_000)
+        bids, asks = generate_synthetic_orderbook(
+            midpoint=midpoint,
+            spread=spread,
+            liquidity_factor=liquidity_factor,
+        )
+
+        book_side = asks if side.upper() == "BUY" else bids
+        fill_result = walk_orderbook(
+            side=side,
+            size=size,
+            orderbook_levels=book_side,
+            midpoint=midpoint,
+        )
+
+        if fill_result.rejected:
+            analysis = {
+                "was_rejected": True,
+                "rejection_reason": fill_result.rejection_reason,
+                "slippage_bps": 0,
+                "fee_cost_usd": 0,
+                "simulated_latency_ms": 0,
+            }
+            self._trade_analyses.append(analysis)
+
+            return ExecutionResult(
+                success=False,
+                order_id=order_id,
+                error=f"Fill failed: {fill_result.rejection_reason}",
+                analysis=analysis,
+            )
+
+        fill_price = fill_result.avg_fill_price
+        fill_size = fill_result.filled_size
+
+        # 3. Compute fee
+        notional = fill_price * fill_size
+        fee = compute_fee(notional, self._cumulative_volume, is_maker)
+        self._cumulative_volume += notional
+
+        # 4. Simulate latency
+        latency_ms = simulate_fill_latency()
+
+        logger.info(
+            f"[PAPER] Filled: {side} {fill_size}@{fill_price} "
+            f"slip={fill_result.slippage_bps:.1f}bps fee={fee:.4f} "
+            f"latency={latency_ms:.0f}ms id={order_id}"
+        )
+
+        # 5. Build analysis
+        tranches_list = [{"price": t.price, "size": t.size} for t in fill_result.tranches]
+
+        analysis_metrics = compute_trade_analysis(
+            side=side,
+            requested_size=size,
+            requested_price=price,
+            fill_price=fill_price,
+            fill_size=fill_size,
+            midpoint=midpoint,
+            spread=spread,
+            fee=fee,
+            fee_type="maker" if is_maker else "taker",
+            slippage_bps=fill_result.slippage_bps,
+            latency_ms=latency_ms,
+            tranches_count=len(fill_result.tranches),
+            is_partial=fill_result.is_partial,
+            was_rejected=False,
+            rejection_reason=None,
+            queue_position=None,
+            estimated_wait_ticks=None,
+            pnl=0.0,
+        )
+
+        analysis_dict = {
+            "slippage_bps": analysis_metrics.slippage_bps,
+            "slippage_cost_usd": analysis_metrics.slippage_cost_usd,
+            "spread_cost_usd": analysis_metrics.spread_cost_usd,
+            "fee_cost_usd": analysis_metrics.fee_cost_usd,
+            "fee_type": analysis_metrics.fee_type,
+            "total_execution_cost_usd": analysis_metrics.total_execution_cost_usd,
+            "fill_rate": analysis_metrics.fill_rate,
+            "is_partial": analysis_metrics.is_partial,
+            "tranches_count": analysis_metrics.tranches_count,
+            "simulated_latency_ms": analysis_metrics.simulated_latency_ms,
+            "was_rejected": False,
+            "rejection_reason": None,
+        }
+        self._trade_analyses.append(analysis_dict)
+
+        # 6. Report trade
         trade = {
             "order_id": order_id,
             "token_id": token_id,
             "side": side,
             "price": fill_price,
-            "size": size,
-            "status": "FILLED",
+            "size": fill_size,
+            "fee": fee,
+            "slippage_bps": fill_result.slippage_bps,
+            "status": "PARTIALLY_FILLED" if fill_result.is_partial else "FILLED",
             "filled_at": time.time(),
         }
         self._report_trade(trade)
@@ -556,8 +691,15 @@ class PaperExecutor:
         return ExecutionResult(
             success=True,
             order_id=order_id,
-            filled_size=size,
+            filled_size=fill_size,
             filled_price=fill_price,
+            slippage_bps=fill_result.slippage_bps,
+            fee=fee,
+            fee_type="maker" if is_maker else "taker",
+            simulated_latency_ms=latency_ms,
+            is_partial=fill_result.is_partial,
+            tranches=tranches_list,
+            analysis=analysis_dict,
         )
 
     # ── Order Management ────────────────────────────────────────────────────
@@ -586,3 +728,7 @@ class PaperExecutor:
 
     def is_healthy(self) -> bool:
         return True
+
+    def get_trade_analyses(self) -> list[dict]:
+        """Return all trade analysis records."""
+        return list(self._trade_analyses)
