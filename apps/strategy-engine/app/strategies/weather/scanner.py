@@ -418,10 +418,11 @@ class WeatherArbScanner:
             # Step 2: Fetch Polymarket weather markets
             markets = await self.fetch_weather_markets()
 
-            # If no real markets found, generate simulated ones for paper mode
-            if not markets and not os.getenv("POLYMARKET_PRIVATE_KEY"):
+            # If no real markets found, generate simulated ones so the
+            # scanner always has something to work with (paper or demo mode)
+            if not markets:
                 markets = self._generate_simulated_markets(forecasts)
-                logger.info("No live markets — using %d simulated markets for paper mode", len(markets))
+                logger.info("No live markets — using %d simulated markets", len(markets))
 
             self._last_markets = markets
             result["markets_found"] = len(markets)
