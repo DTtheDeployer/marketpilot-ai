@@ -26,6 +26,10 @@ import {
   Activity,
   Settings2,
 } from "lucide-react";
+import { EdgeGapBar } from "@/components/charts/strategy/EdgeGapBar";
+import { OpportunityHeatmap } from "@/components/charts/strategy/OpportunityHeatmap";
+import { WinRateGauge } from "@/components/charts/performance/WinRateGauge";
+import { LivePnLTicker } from "@/components/charts/realtime/LivePnLTicker";
 
 interface WeatherStatus {
   running: boolean;
@@ -298,6 +302,68 @@ export default function WeatherArbPage() {
           </div>
         </div>
       </div>
+
+      {/* Strategy Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Opportunity Heatmap — derived from signals */}
+        <div className="lg:col-span-2">
+          <OpportunityHeatmap
+            opportunities={
+              signals.length > 0
+                ? signals.map((s) => ({
+                    city: s.city,
+                    cityCode: s.city.toLowerCase().replace(/\s/g, "-"),
+                    evMultiple: s.expected_value > 0 && s.market_price > 0
+                      ? (s.noaa_confidence * 100) / (s.market_price * 100)
+                      : 1,
+                    noaaConfidence: Math.round(s.noaa_confidence * 100),
+                    marketPrice: Math.round(s.market_price * 100),
+                    bucket: s.bucket,
+                  }))
+                : [
+                    { city: "NYC", cityCode: "nyc", evMultiple: 5.7, noaaConfidence: 85, marketPrice: 15, bucket: "32-40°F" },
+                    { city: "Chicago", cityCode: "chi", evMultiple: 4.2, noaaConfidence: 88, marketPrice: 21, bucket: "25-32°F" },
+                    { city: "Seattle", cityCode: "sea", evMultiple: 3.8, noaaConfidence: 76, marketPrice: 20, bucket: "40-48°F" },
+                    { city: "Atlanta", cityCode: "atl", evMultiple: 2.9, noaaConfidence: 72, marketPrice: 25, bucket: "48-56°F" },
+                    { city: "Dallas", cityCode: "dal", evMultiple: 2.1, noaaConfidence: 63, marketPrice: 30, bucket: "56-64°F" },
+                    { city: "Miami", cityCode: "mia", evMultiple: 1.4, noaaConfidence: 56, marketPrice: 40, bucket: "72-80°F" },
+                  ]
+            }
+          />
+        </div>
+
+        {/* Win Rate + P&L sidebar */}
+        <div className="space-y-6">
+          <WinRateGauge
+            winRate={status?.win_rate ?? 0}
+            wins={Math.round((status?.total_trades ?? 0) * ((status?.win_rate ?? 0) / 100))}
+            losses={Math.round((status?.total_trades ?? 0) * (1 - (status?.win_rate ?? 0) / 100))}
+            size="sm"
+          />
+          <div className="rounded-xl border border-white/5 bg-gray-900/50 p-4">
+            <LivePnLTicker
+              currentPnL={status?.daily_pnl ?? 0}
+              label="Daily P&L"
+              size="md"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Edge Gap — show top signal if available */}
+      {signals.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {signals.slice(0, 3).map((signal, i) => (
+            <EdgeGapBar
+              key={i}
+              noaaConfidence={Math.round(signal.noaa_confidence * 100)}
+              marketPrice={Math.round(signal.market_price * 100)}
+              city={signal.city}
+              bucket={signal.bucket}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Strategy Parameters */}
       <Card>

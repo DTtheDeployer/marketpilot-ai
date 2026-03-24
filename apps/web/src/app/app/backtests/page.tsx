@@ -27,6 +27,9 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { useApi } from "@/hooks/use-api";
+import { EquityCurve } from "@/components/charts/performance/EquityCurve";
+import { PnLBars } from "@/components/charts/performance/PnLBars";
+import { WinRateGauge } from "@/components/charts/performance/WinRateGauge";
 
 const statusConfig: Record<string, { variant: "success" | "warning" | "danger" | "default"; label: string }> = {
   COMPLETED: { variant: "success", label: "Completed" },
@@ -291,6 +294,43 @@ export default function BacktestsPage() {
                       <div className="text-center p-3 rounded-lg bg-surface-200/50 border border-surface-300">
                         <p className="text-lg font-bold font-mono text-surface-900">{Number(profitFactor).toFixed(2)}</p>
                         <p className="text-xs text-surface-600 mt-1">Profit Factor</p>
+                      </div>
+                    </div>
+
+                    {/* Backtest Charts */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+                      {/* Equity Curve from trade log */}
+                      <div className="lg:col-span-2">
+                        <EquityCurve
+                          data={(() => {
+                            const log = results.tradeLog || all.trades || [];
+                            const bankrollStart = bt.config?.bankroll || 100;
+                            if (!Array.isArray(log) || log.length === 0) {
+                              return [{ date: bt.startDate || new Date().toISOString(), bankroll: bankrollStart, pnl: 0 }];
+                            }
+                            let cum = bankrollStart;
+                            return log.map((t: any, idx: number) => {
+                              cum += (t.pnl || 0);
+                              return {
+                                date: t.date || new Date(Date.now() - (log.length - idx) * 86400000).toISOString(),
+                                bankroll: Math.round(cum * 100) / 100,
+                                pnl: t.pnl || 0,
+                              };
+                            });
+                          })()}
+                          startingBankroll={bt.config?.bankroll || 100}
+                          height="sm"
+                          showGrid={false}
+                        />
+                      </div>
+                      {/* Win Rate Gauge */}
+                      <div className="flex items-center justify-center">
+                        <WinRateGauge
+                          winRate={Number(winRate)}
+                          wins={Math.round(trades * (Number(winRate) / 100))}
+                          losses={Math.round(trades * (1 - Number(winRate) / 100))}
+                          size="sm"
+                        />
                       </div>
                     </div>
 

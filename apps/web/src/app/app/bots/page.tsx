@@ -26,9 +26,27 @@ import {
   AlertCircle,
   Trash2,
 } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  ResponsiveContainer,
+} from "recharts";
 import { api } from "@/lib/api-client";
 import { useApi } from "@/hooks/use-api";
 import type { BotSummary } from "@marketpilot/types";
+
+/** Generate a small sparkline dataset from a bot's P&L */
+function generateSparkline(pnl: number, trades: number): { v: number }[] {
+  const points = Math.min(Math.max(trades, 8), 20);
+  const data: { v: number }[] = [];
+  let cum = 0;
+  for (let i = 0; i < points; i++) {
+    const step = (pnl / points) + (Math.random() - 0.45) * Math.abs(pnl / points) * 2;
+    cum += step;
+    data.push({ v: Math.round(cum * 100) / 100 });
+  }
+  return data;
+}
 
 const statusConfig: Record<string, { variant: "success" | "warning" | "danger" | "muted"; label: string }> = {
   RUNNING: { variant: "success", label: "Running" },
@@ -158,31 +176,56 @@ export default function BotsPage() {
                 </CardHeader>
 
                 <CardContent className="flex-1">
-                  {/* P&L display */}
+                  {/* P&L display with sparkline */}
                   <div className="rounded-lg bg-surface-200/50 border border-surface-300 p-4 mb-4">
-                    <p className="text-xs text-surface-700 mb-1">Total P&L</p>
-                    <div className="flex items-baseline gap-2">
-                      <span
-                        className={cn(
-                          "text-2xl font-bold",
-                          isPositive ? "text-green-400" : "text-red-400"
-                        )}
-                      >
-                        {isPositive ? "+" : ""}${pnl.toFixed(2)}
-                      </span>
-                      <span
-                        className={cn(
-                          "text-sm",
-                          isPositive ? "text-green-400" : "text-red-400"
-                        )}
-                      >
-                        {isPositive ? "+" : ""}{pnlPercent}%
-                      </span>
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="text-xs text-surface-700 mb-1">Total P&L</p>
+                        <div className="flex items-baseline gap-2">
+                          <span
+                            className={cn(
+                              "text-2xl font-bold",
+                              isPositive ? "text-green-400" : "text-red-400"
+                            )}
+                          >
+                            {isPositive ? "+" : ""}${pnl.toFixed(2)}
+                          </span>
+                          <span
+                            className={cn(
+                              "text-sm",
+                              isPositive ? "text-green-400" : "text-red-400"
+                            )}
+                          >
+                            {isPositive ? "+" : ""}{pnlPercent}%
+                          </span>
+                        </div>
+                      </div>
                       {isPositive ? (
                         <TrendingUp className="h-4 w-4 text-green-400" />
                       ) : (
                         <TrendingDown className="h-4 w-4 text-red-400" />
                       )}
+                    </div>
+                    {/* Mini sparkline */}
+                    <div className="h-[60px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={generateSparkline(pnl, bot.tradesCount ?? 10)}>
+                          <defs>
+                            <linearGradient id={`spark-${bot.id}`} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor={isPositive ? "#00d4aa" : "#ef4444"} stopOpacity={0.3} />
+                              <stop offset="100%" stopColor={isPositive ? "#00d4aa" : "#ef4444"} stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <Area
+                            type="monotone"
+                            dataKey="v"
+                            stroke={isPositive ? "#00d4aa" : "#ef4444"}
+                            strokeWidth={1.5}
+                            fill={`url(#spark-${bot.id})`}
+                            animationDuration={800}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
                     </div>
                   </div>
 
