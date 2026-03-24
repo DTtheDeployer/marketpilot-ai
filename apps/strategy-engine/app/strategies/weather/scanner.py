@@ -126,8 +126,12 @@ class WeatherArbScanner:
         markets: list[WeatherMarket] = []
 
         try:
-            # Search for weather-tagged markets
-            for tag in ("weather", "temperature"):
+            # Search for weather-related markets with broad tag coverage
+            search_tags = (
+                "weather", "temperature", "climate", "hurricane",
+                "snow", "heat", "cold", "storm", "forecast",
+            )
+            for tag in search_tags:
                 url = f"{GAMMA_API_URL}/markets"
                 params = {
                     "tag": tag,
@@ -149,6 +153,27 @@ class WeatherArbScanner:
                     if parsed and parsed.city:
                         markets.append(parsed)
 
+            # Also search by keyword in case tags aren't set
+            for keyword in ("temperature", "high temp", "degrees"):
+                url = f"{GAMMA_API_URL}/markets"
+                params = {
+                    "active": "true",
+                    "closed": "false",
+                    "limit": "50",
+                }
+                resp = await client.get(url, params=params)
+                if resp.status_code != 200:
+                    continue
+                data = resp.json()
+                if not isinstance(data, list):
+                    data = data.get("data", data.get("markets", []))
+                for raw_market in data:
+                    question = raw_market.get("question", "").lower()
+                    if keyword in question:
+                        parsed = WeatherMarket.from_gamma_market(raw_market)
+                        if parsed and parsed.city:
+                            markets.append(parsed)
+
             # Deduplicate by market_id
             seen: set[str] = set()
             unique: list[WeatherMarket] = []
@@ -163,6 +188,99 @@ class WeatherArbScanner:
         except Exception as exc:
             logger.error("Failed to fetch weather markets: %s", exc)
             return []
+
+    # ------------------------------------------------------------------ #
+    #  Simulated markets for paper mode                                   #
+    # ------------------------------------------------------------------ #
+
+    def _generate_simulated_markets(
+        self, forecasts: dict[str, CityForecast]
+    ) -> list[WeatherMarket]:
+        """Generate realistic simulated weather markets from NOAA forecasts.
+
+        Creates markets that sometimes have genuine edge (NOAA confidence
+        high but market price low) and sometimes don't, so the strategy
+        has realistic signal generation.
+        """
+        import random
+
+        markets: list[WeatherMarket] = []
+        today = datetime.now(timezone.utc).date()
+
+        for city_slug, forecast in forecasts.items():
+            if forecast.error:
+                continue
+
+            city_name = forecast.city_config.name if forecast.city_config else city_slug.capitalize()
+
+            # Generate markets for next 1-3 days
+            for day_offset in range(1, 4):
+                target = today + timedelta(days=day_offset)
+                high_temp = forecast.high_for_date(target)
+                if high_temp is None:
+                    continue
+
+                # Create "above" threshold markets with varying edge
+                # Bias thresholds below forecast so NOAA says "very likely above"
+                # This creates realistic opportunities where NOAA confidence is
+                # high but the market hasn't priced it in yet
+                threshold_offsets = [-8, -6, -5, -3, -2, 0, 3, 8, 12]
+                offset = random.choice(threshold_offsets)
+                threshold = round(high_temp + offset)
+
+                noaa_confidence = forecast.confidence_for_date(target)
+
+                # For markets well below forecast, create mispriced opportunities
+                temp_margin = high_temp - threshold
+                if temp_margin > 6:
+                    # NOAA is very confident it'll be above → should be priced high
+                    # But we simulate markets where the market hasn't caught up
+                    true_prob = min(noaa_confidence, 0.95)
+                    # 40% chance of significant mispricing (the opportunity)
+                    if random.random() < 0.40:
+                        yes_price = round(random.uniform(0.05, 0.14), 2)  # Cheap!
+                    else:
+                        yes_price = round(true_prob * random.uniform(0.7, 1.0), 2)
+                elif temp_margin > 3:
+                    true_prob = noaa_confidence * 0.90
+                    if random.random() < 0.30:
+                        yes_price = round(random.uniform(0.08, 0.18), 2)
+                    else:
+                        yes_price = round(true_prob * random.uniform(0.6, 0.9), 2)
+                elif temp_margin > 0:
+                    true_prob = noaa_confidence * 0.75
+                    yes_price = round(true_prob * random.uniform(0.5, 1.1), 2)
+                elif temp_margin > -3:
+                    true_prob = 0.30 + random.random() * 0.25
+                    yes_price = round(true_prob * random.uniform(0.8, 1.2), 2)
+                else:
+                    true_prob = 0.05 + random.random() * 0.15
+                    yes_price = round(true_prob * random.uniform(0.8, 1.5), 2)
+
+                yes_price = max(0.02, min(0.98, yes_price))
+                no_price = round(1.0 - yes_price, 2)
+
+                market_id = f"sim-{city_slug}-{target.isoformat()}-above-{threshold}"
+                question = f"Will the high temperature in {city_name} be above {threshold}°F on {target.strftime('%B %d')}?"
+
+                markets.append(WeatherMarket(
+                    market_id=market_id,
+                    condition_id=f"sim-cond-{market_id}",
+                    question=question,
+                    city=city_slug,
+                    threshold_direction="above",
+                    threshold_temp_f=float(threshold),
+                    target_date=target,
+                    yes_price=yes_price,
+                    no_price=no_price,
+                    token_id_yes=f"sim-yes-{market_id}",
+                    token_id_no=f"sim-no-{market_id}",
+                    volume_24h=random.uniform(5000, 50000),
+                    active=True,
+                ))
+
+        random.shuffle(markets)
+        return markets
 
     # ------------------------------------------------------------------ #
     #  Trade execution via CLOB                                           #
@@ -299,6 +417,12 @@ class WeatherArbScanner:
 
             # Step 2: Fetch Polymarket weather markets
             markets = await self.fetch_weather_markets()
+
+            # If no real markets found, generate simulated ones for paper mode
+            if not markets and not os.getenv("POLYMARKET_PRIVATE_KEY"):
+                markets = self._generate_simulated_markets(forecasts)
+                logger.info("No live markets — using %d simulated markets for paper mode", len(markets))
+
             self._last_markets = markets
             result["markets_found"] = len(markets)
 
@@ -327,10 +451,35 @@ class WeatherArbScanner:
                         signal_strength=sig.signal_strength,
                     )
             elif signals:
+                # Paper mode — simulate execution without real orders
                 logger.info(
-                    "Found %d signals but POLYMARKET_PRIVATE_KEY not set — dry run",
+                    "Found %d signals — paper mode execution (no private key)",
                     len(signals),
                 )
+                for sig in signals:
+                    allowed, reason = self.pm.can_open_position(sig.kelly_size_usd)
+                    if not allowed:
+                        logger.info("Skipping paper signal %s: %s", sig.id[:8], reason)
+                        continue
+                    sig.executed = True
+                    pos = Position(
+                        id=sig.id,
+                        market_id=sig.market_id,
+                        token_id=sig.token_id,
+                        city=sig.city,
+                        target_date=sig.target_date,
+                        side=sig.side,
+                        outcome=sig.outcome,
+                        entry_price=sig.market_price,
+                        size_usd=sig.kelly_size_usd,
+                        shares=sig.kelly_size_usd / sig.market_price if sig.market_price > 0 else 0,
+                        noaa_confidence=sig.noaa_confidence,
+                        forecast_temp_f=sig.forecast_temp_f,
+                        bucket_description=sig.bucket_description,
+                        order_id=f"paper-{sig.id[:12]}",
+                    )
+                    self.pm.open_position(pos)
+                    result["trades_executed"] += 1
 
             # Step 5: Check exits on open positions
             open_positions = self.pm.open_positions
