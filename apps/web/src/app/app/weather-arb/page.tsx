@@ -91,10 +91,12 @@ export default function WeatherArbPage() {
   const fetchSignals = useCallback(async () => {
     try {
       const res = await fetch(`${STRATEGY_URL}/weather-arb/signals`);
+      if (!res.ok) return;
       const data = await res.json();
-      setSignals(data.signals || data.data || []);
-    } catch {
-      // Silent
+      const list = data.signals || data.data || [];
+      setSignals(list);
+    } catch (err) {
+      console.error("Failed to fetch signals:", err);
     }
   }, []);
 
@@ -147,13 +149,35 @@ export default function WeatherArbPage() {
 
   const handleScan = async () => {
     setActionLoading("scan");
+    setError(null);
     try {
-      const res = await fetch(`${STRATEGY_URL}/weather-arb/scan`, { method: "POST" });
-      const data = await res.json();
-      await fetchSignals();
-      await fetchStatus();
-    } catch {
-      setError("Scan failed");
+      // Scan can take 15-20s due to NOAA API calls — use a long timeout
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 60000);
+
+      const res = await fetch(`${STRATEGY_URL}/weather-arb/scan`, {
+        method: "POST",
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (!res.ok) {
+        setError(`Scan returned ${res.status}`);
+      } else {
+        const data = await res.json();
+        // Refresh signals and status after scan completes
+        await fetchSignals();
+        await fetchStatus();
+      }
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError("Scan timed out — try again");
+      } else {
+        setError(`Scan failed: ${err instanceof Error ? err.message : "network error"}`);
+      }
+      // Still try to fetch signals — scan may have partially completed
+      await fetchSignals().catch(() => {});
+      await fetchStatus().catch(() => {});
     }
     setActionLoading(null);
   };
