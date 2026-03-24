@@ -41,11 +41,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — allow all localhost ports in development
+# CORS — allow localhost (dev), Vercel (prod), and Railway (infra)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
-    allow_origin_regex=r"^https?://localhost(:\d+)?$",
+    allow_origin_regex=r"^https?://(localhost(:\d+)?|.*\.vercel\.app|.*\.up\.railway\.app)$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
