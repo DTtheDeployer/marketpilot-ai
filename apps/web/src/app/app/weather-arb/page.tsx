@@ -45,13 +45,19 @@ interface WeatherStatus {
 interface Signal {
   market_id: string;
   city: string;
-  bucket: string;
-  action: string;
+  bucket?: string;
+  bucket_description?: string;
+  action?: string;
+  side?: string;
   noaa_confidence: number;
   market_price: number;
   expected_value: number;
-  kelly_size: number;
-  reason: string;
+  kelly_size?: number;
+  kelly_size_usd?: number;
+  reason?: string;
+  signal_strength?: string;
+  outcome?: string;
+  market_question?: string;
   timestamp?: string;
 }
 
@@ -318,7 +324,7 @@ export default function WeatherArbPage() {
                       : 1,
                     noaaConfidence: Math.round(s.noaa_confidence * 100),
                     marketPrice: Math.round(s.market_price * 100),
-                    bucket: s.bucket,
+                    bucket: s.bucket || s.bucket_description || "",
                   }))
                 : [
                     { city: "NYC", cityCode: "nyc", evMultiple: 5.7, noaaConfidence: 85, marketPrice: 15, bucket: "32-40°F" },
@@ -359,7 +365,7 @@ export default function WeatherArbPage() {
               noaaConfidence={Math.round(signal.noaa_confidence * 100)}
               marketPrice={Math.round(signal.market_price * 100)}
               city={signal.city}
-              bucket={signal.bucket}
+              bucket={signal.bucket || signal.bucket_description || ""}
             />
           ))}
         </div>
@@ -412,27 +418,33 @@ export default function WeatherArbPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {signals.slice(0, 10).map((signal, i) => (
+              {signals.slice(0, 10).map((signal, i) => {
+                const action = signal.action || signal.side || "BUY";
+                const bucket = signal.bucket || signal.bucket_description || "";
+                const reason = signal.reason || signal.market_question || signal.signal_strength || "";
+                const kellySize = signal.kelly_size ?? signal.kelly_size_usd ?? 0;
+
+                return (
                 <div
                   key={i}
                   className={`flex items-center justify-between rounded-lg border bg-surface-200/30 p-3 transition-all duration-200 hover:bg-surface-200/60 ${
-                    signal.action === "BUY"
+                    action === "BUY"
                       ? "border-l-2 border-l-green-500 border-t-surface-300 border-r-surface-300 border-b-surface-300"
-                      : signal.action === "SELL"
+                      : action === "SELL"
                         ? "border-l-2 border-l-red-500 border-t-surface-300 border-r-surface-300 border-b-surface-300"
                         : "border-surface-300"
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Badge variant={signal.action === "BUY" ? "success" : signal.action === "SELL" ? "danger" : "muted"}>
-                      {signal.action}
+                    <Badge variant={action === "BUY" ? "success" : action === "SELL" ? "danger" : "muted"}>
+                      {action}
                     </Badge>
                     <div>
                       <p className="text-sm font-medium text-surface-900">
                         <MapPin className="h-3 w-3 inline mr-1" />
-                        {signal.city} {signal.bucket}
+                        {signal.city} {bucket}
                       </p>
-                      <p className="text-xs text-surface-600">{signal.reason}</p>
+                      <p className="text-xs text-surface-600">{reason}</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -444,7 +456,8 @@ export default function WeatherArbPage() {
                     </p>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
