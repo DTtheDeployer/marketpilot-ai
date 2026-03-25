@@ -127,19 +127,34 @@ export default function WeatherArbPage() {
 
   const handleStart = async () => {
     setActionLoading("start");
+    setError(null);
     try {
-      await fetch(`${STRATEGY_URL}/weather-arb/start`, { method: "POST" });
-      await fetchStatus();
-    } catch {
-      setError("Failed to start");
+      const res = await fetch(`${STRATEGY_URL}/weather-arb/start`, { method: "POST" });
+      if (!res.ok) {
+        const text = await res.text();
+        setError(`Failed to start: ${text}`);
+      } else {
+        const data = await res.json();
+        if (data.status === "started" || data.status === "already_running") {
+          // Success — refresh status
+          await fetchStatus();
+          await fetchSignals();
+        }
+      }
+    } catch (err) {
+      setError(`Failed to start: ${err instanceof Error ? err.message : "network error"}`);
     }
     setActionLoading(null);
   };
 
   const handleStop = async () => {
     setActionLoading("stop");
+    setError(null);
     try {
-      await fetch(`${STRATEGY_URL}/weather-arb/stop`, { method: "POST" });
+      const res = await fetch(`${STRATEGY_URL}/weather-arb/stop`, { method: "POST" });
+      if (!res.ok) {
+        setError("Failed to stop");
+      }
       await fetchStatus();
     } catch {
       setError("Failed to stop");

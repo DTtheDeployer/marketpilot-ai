@@ -90,7 +90,7 @@ class EmergencyStopResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 @router.post("/start", response_model=StartStopResponse)
-def start_scanner():
+async def start_scanner():
     """Start the automated weather arb scanning loop."""
     scanner = _get_scanner()
     result = scanner.start()
@@ -98,7 +98,7 @@ def start_scanner():
 
 
 @router.post("/stop", response_model=StartStopResponse)
-def stop_scanner():
+async def stop_scanner():
     """Stop the automated weather arb scanning loop."""
     scanner = _get_scanner()
     result = scanner.stop()
