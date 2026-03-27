@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import backtests, paper, risk, strategies, live, market_maker, weather_arb, marketing
+from app.api import backtests, paper, risk, strategies, live, market_maker, weather_arb, sports_arb, marketing
 from app.core.config import settings
 
 logging.basicConfig(level=logging.INFO)
@@ -59,6 +59,7 @@ app.include_router(risk.router)
 app.include_router(live.router)
 app.include_router(market_maker.router)
 app.include_router(weather_arb.router)
+app.include_router(sports_arb.router)
 app.include_router(marketing.router)
 
 

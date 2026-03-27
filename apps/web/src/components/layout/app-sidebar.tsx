@@ -16,6 +16,7 @@ import {
   Users,
   ChevronDown,
   CloudSun,
+  Trophy,
   Plug,
   X,
 } from "lucide-react";
@@ -26,6 +27,7 @@ import { useAuthStore } from "@/stores/auth-store";
 const mainNav = [
   { href: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/app/weather-arb", label: "Weather Arb", icon: CloudSun },
+  { href: "/app/sports-arb", label: "Sports Arb", icon: Trophy },
   { href: "/app/connect", label: "Connect", icon: Plug },
   { href: "/app/strategies", label: "Strategies", icon: Lightbulb },
   { href: "/app/bots", label: "Bots", icon: Bot },
