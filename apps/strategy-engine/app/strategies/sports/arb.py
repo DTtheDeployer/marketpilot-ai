@@ -113,29 +113,49 @@ class SportsMarket:
     def from_gamma_market(cls, market: dict) -> Optional["SportsMarket"]:
         """Parse a market from the Gamma Markets API response."""
         question = market.get("question", "")
-        tokens = market.get("tokens", [])
-        if len(tokens) < 2:
+        if not question:
             return None
 
-        yes_token = next((t for t in tokens if t.get("outcome", "").upper() == "YES"), None)
-        no_token = next((t for t in tokens if t.get("outcome", "").upper() == "NO"), None)
-        if not yes_token or not no_token:
+        # Gamma API returns parallel arrays, not nested token objects
+        outcomes = market.get("outcomes") or []
+        prices = market.get("outcomePrices") or []
+        token_ids = market.get("clobTokenIds") or []
+
+        # Also support nested tokens format (older API versions)
+        tokens = market.get("tokens") or []
+        if tokens and len(tokens) >= 2 and not outcomes:
+            yes_token = next((t for t in tokens if t.get("outcome", "").upper() == "YES"), None)
+            no_token = next((t for t in tokens if t.get("outcome", "").upper() == "NO"), None)
+            if yes_token and no_token:
+                outcomes = ["Yes", "No"]
+                prices = [str(yes_token.get("price", 0)), str(no_token.get("price", 0))]
+                token_ids = [yes_token.get("token_id", ""), no_token.get("token_id", "")]
+
+        if len(outcomes) < 2 or len(prices) < 2:
             return None
 
-        yes_price = float(yes_token.get("price", 0))
-        no_price = float(no_token.get("price", 0))
+        # Map outcomes to Yes/No
+        yes_idx = next((i for i, o in enumerate(outcomes) if o.lower() == "yes"), None)
+        no_idx = next((i for i, o in enumerate(outcomes) if o.lower() == "no"), None)
+        if yes_idx is None or no_idx is None:
+            return None
+
+        yes_price = float(prices[yes_idx]) if yes_idx < len(prices) else 0.0
+        no_price = float(prices[no_idx]) if no_idx < len(prices) else 0.0
+        yes_token_id = token_ids[yes_idx] if yes_idx < len(token_ids) else ""
+        no_token_id = token_ids[no_idx] if no_idx < len(token_ids) else ""
 
         # Try to extract team names from question
         team1, team2 = _extract_teams(question)
 
         return cls(
             market_id=market.get("id", market.get("condition_id", "")),
-            condition_id=market.get("condition_id", ""),
+            condition_id=market.get("condition_id", market.get("id", "")),
             question=question,
             yes_price=yes_price,
             no_price=no_price,
-            token_id_yes=yes_token.get("token_id", ""),
-            token_id_no=no_token.get("token_id", ""),
+            token_id_yes=yes_token_id,
+            token_id_no=no_token_id,
             volume_24h=float(market.get("volume", 0)),
             active=market.get("active", True),
             end_date=market.get("end_date_iso"),
