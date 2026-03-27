@@ -21,7 +21,7 @@ from typing import Optional
 
 import httpx
 
-from app.data.odds_client import OddsClient, BookmakerOdds, TRACKED_SPORTS
+from app.data.odds_client import OddsClient, BookmakerOdds, FuturesOdds, TRACKED_SPORTS
 from app.strategies.sports.arb import (
     SportsArbStrategy,
     SportsMarket,
@@ -170,6 +170,90 @@ class SportsArbScanner:
             return []
 
     # ------------------------------------------------------------------ #
+    #  Futures matching — real Polymarket championship markets             #
+    # ------------------------------------------------------------------ #
+
+    def _match_futures(
+        self,
+        futures: list[FuturesOdds],
+        markets: list[SportsMarket],
+    ) -> list[SportsSignal]:
+        """
+        Match championship futures odds to Polymarket futures markets.
+        e.g. bookmaker says "Lakers 4.5% to win NBA" vs Polymarket "Will
+        the Lakers win the 2026 NBA Finals?" trading at 3.8¢.
+        """
+        from app.strategies.sports.arb import _normalize_for_match, SportsSignal
+
+        signals: list[SportsSignal] = []
+        min_edge = self.strategy.MIN_EDGE
+
+        for fut in futures:
+            team_norm = _normalize_for_match(fut.team)
+            if not team_norm:
+                continue
+
+            for market in markets:
+                if not market.active:
+                    continue
+                q_norm = _normalize_for_match(market.question)
+
+                # Check if the team name appears in the question
+                team_words = [w for w in team_norm.split() if len(w) > 2]
+                if not team_words:
+                    continue
+                matches = sum(1 for w in team_words if w in q_norm)
+                if matches < max(1, len(team_words) * 0.6):
+                    continue
+
+                # Found a match — compare probabilities
+                poly_price = market.yes_price
+                book_prob = fut.prob
+                edge = book_prob - poly_price
+
+                if edge < min_edge:
+                    continue
+                if poly_price <= 0.01 or poly_price >= 0.99:
+                    continue
+
+                # Kelly sizing
+                payout_ratio = (1.0 - poly_price) / poly_price
+                kelly = self.pm.kelly_size(
+                    win_probability=book_prob, payout_ratio=payout_ratio,
+                )
+                if kelly <= 0:
+                    continue
+
+                confidence = "high" if edge >= 0.10 else "medium"
+                token_id = market.token_id_yes
+
+                signals.append(SportsSignal(
+                    event=f"{fut.team} — Championship",
+                    sport=fut.sport,
+                    side="BUY",
+                    outcome="YES",
+                    team=fut.team,
+                    bookmaker_prob=book_prob,
+                    polymarket_price=poly_price,
+                    edge_pct=edge,
+                    kelly_size=kelly,
+                    confidence=confidence,
+                    market_id=market.market_id,
+                    token_id=token_id,
+                    condition_id=market.condition_id,
+                    market_question=market.question,
+                    best_book=fut.best_book,
+                    commence_time="",
+                ))
+                logger.info(
+                    "Futures match: %s — book %.1f%% vs poly %.1f%% = %.1f%% edge",
+                    fut.team, book_prob * 100, poly_price * 100, edge * 100,
+                )
+
+        signals.sort(key=lambda s: s.edge_pct, reverse=True)
+        return signals
+
+    # ------------------------------------------------------------------ #
     #  Simulated markets for paper mode                                   #
     # ------------------------------------------------------------------ #
 
@@ -279,24 +363,35 @@ class SportsArbScanner:
         }
 
         try:
-            # Step 1: Fetch bookmaker odds
+            # Step 1: Fetch bookmaker odds (game-level + futures)
             odds = await self.odds_client.get_all_tracked_odds()
+            futures = await self.odds_client.get_all_futures()
             self._last_odds = odds
-            result["odds_fetched"] = len(odds)
+            result["odds_fetched"] = len(odds) + len(futures)
 
             # Step 2: Fetch Polymarket sports markets
             markets = await self.fetch_sports_markets()
 
-            # If no real markets found, generate simulated ones
-            if not markets and odds:
-                markets = self._generate_simulated_markets(odds)
-                logger.info("No live sports markets — using %d simulated markets", len(markets))
+            # Step 3a: Generate signals from futures vs real Polymarket markets
+            signals = self._match_futures(futures, markets)
+            logger.info(
+                "Futures matching: %d futures x %d markets → %d signals",
+                len(futures), len(markets), len(signals),
+            )
+
+            # Step 3b: Also try game-level matching
+            game_signals = self.strategy.scan_opportunities(odds, markets)
+            signals.extend(game_signals)
+
+            # Step 3c: If no real signals at all, fall back to simulated
+            if not signals and odds:
+                sim_markets = self._generate_simulated_markets(odds)
+                logger.info("No real matches — using %d simulated markets", len(sim_markets))
+                signals = self.strategy.scan_opportunities(odds, sim_markets)
+                markets = sim_markets
 
             self._last_markets = markets
             result["markets_found"] = len(markets)
-
-            # Step 3: Generate signals
-            signals = self.strategy.scan_opportunities(odds, markets)
             self._last_signals = signals
             result["signals_generated"] = len(signals)
 

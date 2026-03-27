@@ -23,13 +23,19 @@ logger = logging.getLogger(__name__)
 
 BASE_URL = "https://api.the-odds-api.com/v4"
 
-# Sports we track on Polymarket
+# Sports we track on Polymarket — game-level h2h odds
 TRACKED_SPORTS = [
     "upcoming_mma_mixed_martial_arts",
     "basketball_nba",
     "soccer_epl",
     "soccer_uefa_champions_league",
     "americanfootball_nfl",
+]
+
+# Championship futures — outright winner odds (match Polymarket futures)
+TRACKED_FUTURES = [
+    "basketball_nba_championship_winner",
+    "icehockey_nhl_championship_winner",
 ]
 
 # Cache TTL — 5 minutes to conserve the free-tier quota
@@ -62,6 +68,24 @@ class BookmakerOdds:
             "best_book": self.best_book,
             "sport": self.sport,
             "commence_time": self.commence_time,
+        }
+
+
+@dataclass
+class FuturesOdds:
+    """A single team's championship outright odds."""
+    team: str
+    prob: float          # implied probability (vig-removed)
+    best_book: str
+    sport: str           # e.g. "basketball_nba_championship_winner"
+    decimal_price: float = 0.0
+
+    def to_dict(self) -> dict:
+        return {
+            "team": self.team,
+            "prob": round(self.prob, 4),
+            "best_book": self.best_book,
+            "sport": self.sport,
         }
 
 
@@ -266,6 +290,46 @@ class OddsClient:
         logger.info("Fetched %d total events across %d sports", len(all_odds), len(TRACKED_SPORTS))
         return all_odds
 
+    async def get_futures_odds(self, sport_key: str) -> list[FuturesOdds]:
+        """Fetch championship outright/futures odds for a sport."""
+        if not self._api_key:
+            return []
+
+        cache_key = f"futures:{sport_key}"
+        cached = self._cache.get(cache_key)
+        if cached is not None:
+            return cached  # type: ignore
+
+        client = await self._get_client()
+        try:
+            resp = await client.get(
+                f"{BASE_URL}/sports/{sport_key}/odds",
+                params={
+                    "apiKey": self._api_key,
+                    "regions": "us,eu",
+                    "markets": "outrights",
+                    "oddsFormat": "decimal",
+                },
+            )
+            resp.raise_for_status()
+            events = resp.json()
+            results = self._parse_futures_response(events, sport_key)
+            self._cache.set(cache_key, results)
+            logger.info("Fetched %d futures outcomes for %s", len(results), sport_key)
+            return results
+        except Exception as exc:
+            logger.error("Failed to fetch futures for %s: %s", sport_key, exc)
+            return []
+
+    async def get_all_futures(self) -> list[FuturesOdds]:
+        """Fetch championship futures for all tracked futures sports."""
+        all_futures: list[FuturesOdds] = []
+        for sport_key in TRACKED_FUTURES:
+            futures = await self.get_futures_odds(sport_key)
+            all_futures.extend(futures)
+        logger.info("Fetched %d total futures across %d sports", len(all_futures), len(TRACKED_FUTURES))
+        return all_futures
+
     # ------------------------------------------------------------------ #
     #  Parse API response                                                 #
     # ------------------------------------------------------------------ #
@@ -355,6 +419,73 @@ class OddsClient:
                 sport=sport_key,
                 commence_time=commence,
             ))
+
+        return results
+
+    # ------------------------------------------------------------------ #
+    #  Parse futures/outright response                                    #
+    # ------------------------------------------------------------------ #
+
+    def _parse_futures_response(
+        self, events: list[dict], sport_key: str
+    ) -> list[FuturesOdds]:
+        """Parse The Odds API outrights response into FuturesOdds."""
+        results: list[FuturesOdds] = []
+
+        for event in events:
+            bookmakers = event.get("bookmakers", [])
+            if not bookmakers:
+                continue
+
+            # Find sharpest book
+            best_book = None
+            for pref in ["pinnacle", "draftkings", "fanduel", "betfair"]:
+                for bm in bookmakers:
+                    if pref in bm.get("key", "").lower():
+                        best_book = bm
+                        break
+                if best_book:
+                    break
+            if best_book is None:
+                best_book = bookmakers[0]
+
+            # Find outrights market
+            outrights = None
+            for market in best_book.get("markets", []):
+                if market.get("key") == "outrights":
+                    outrights = market
+                    break
+            if outrights is None:
+                continue
+
+            outcomes = outrights.get("outcomes", [])
+            if not outcomes:
+                continue
+
+            # Collect raw probs for vig removal
+            raw_entries: list[tuple[str, float]] = []
+            for outcome in outcomes:
+                name = outcome.get("name", "")
+                price = float(outcome.get("price", 0))
+                if price > 1.0 and name:
+                    raw_entries.append((name, price))
+
+            if not raw_entries:
+                continue
+
+            # Remove vig: sum of implied probs, normalize
+            total_implied = sum(1.0 / p for _, p in raw_entries)
+            book_title = best_book.get("title", best_book.get("key", "unknown"))
+
+            for name, decimal_price in raw_entries:
+                fair_prob = (1.0 / decimal_price) / total_implied
+                results.append(FuturesOdds(
+                    team=name,
+                    prob=fair_prob,
+                    best_book=book_title,
+                    sport=sport_key,
+                    decimal_price=decimal_price,
+                ))
 
         return results
 
