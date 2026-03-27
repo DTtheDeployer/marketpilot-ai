@@ -116,10 +116,19 @@ class SportsMarket:
         if not question:
             return None
 
-        # Gamma API returns parallel arrays, not nested token objects
-        outcomes = market.get("outcomes") or []
-        prices = market.get("outcomePrices") or []
-        token_ids = market.get("clobTokenIds") or []
+        # Gamma API returns JSON-encoded strings, not native arrays
+        import json as _json
+        def _parse_field(val):
+            if isinstance(val, str):
+                try:
+                    return _json.loads(val)
+                except (ValueError, TypeError):
+                    return []
+            return val or []
+
+        outcomes = _parse_field(market.get("outcomes"))
+        prices = _parse_field(market.get("outcomePrices"))
+        token_ids = _parse_field(market.get("clobTokenIds"))
 
         # Also support nested tokens format (older API versions)
         tokens = market.get("tokens") or []
