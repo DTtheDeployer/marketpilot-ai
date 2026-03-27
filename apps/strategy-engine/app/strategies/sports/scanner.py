@@ -555,6 +555,11 @@ class SportsArbScanner:
         if self._running:
             return {"status": "already_running", "scan_count": self._scan_count}
 
+        # Clear emergency stop so positions can open
+        if self.pm.is_emergency_stopped:
+            self.pm.reset_emergency()
+            logger.info("Cleared emergency stop on scanner start")
+
         self._running = True
         self._task = asyncio.create_task(self._run_loop())
         logger.info("Sports arb scanner started")
