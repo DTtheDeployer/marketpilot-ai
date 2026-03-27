@@ -301,7 +301,17 @@ class SportsArbScanner:
             result["signals_generated"] = len(signals)
 
             # Step 4: Execute trades
-            if signals and os.getenv("POLYMARKET_PRIVATE_KEY"):
+            # Use paper mode when markets are simulated (no real Polymarket IDs)
+            has_real_markets = any(
+                not sig.market_id.startswith("sim-") for sig in signals
+            ) if signals else False
+            use_live = (
+                signals
+                and has_real_markets
+                and os.getenv("POLYMARKET_PRIVATE_KEY")
+            )
+
+            if use_live:
                 executed = self.strategy.execute_signals(signals, self._execute_trade)
                 result["trades_executed"] = len(executed)
 
