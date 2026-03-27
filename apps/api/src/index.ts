@@ -24,7 +24,23 @@ const PORT = process.env.API_PORT || 3001;
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(helmet());
-app.use(cors({ origin: process.env.APP_URL || "http://localhost:3000", credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    const allowed = process.env.APP_URL || "http://localhost:3000";
+    // Allow: exact match, any Vercel preview, localhost, or no origin (server-to-server)
+    if (
+      !origin ||
+      origin === allowed ||
+      origin.endsWith(".vercel.app") ||
+      origin.startsWith("http://localhost")
+    ) {
+      callback(null, true);
+    } else {
+      callback(null, false);
+    }
+  },
+  credentials: true,
+}));
 
 // Stripe webhooks require the raw body for signature verification.
 // This must be registered BEFORE the general express.json() middleware.
