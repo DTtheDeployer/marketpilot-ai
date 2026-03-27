@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
   transpilePackages: ["@marketpilot/ui", "@marketpilot/types", "@marketpilot/database"],
   images: {
     remotePatterns: [
