@@ -411,45 +411,68 @@ class SportsArbScanner:
             result["signals_generated"] = len(signals)
 
             # Step 4: Execute trades
-            # Use paper mode when markets are simulated (no real Polymarket IDs)
-            has_real_markets = any(
-                not sig.market_id.startswith("sim-") for sig in signals
-            ) if signals else False
-            use_live = (
-                signals
-                and has_real_markets
-                and os.getenv("POLYMARKET_PRIVATE_KEY")
-            )
+            # For each signal: if it's a real market AND we have a private key,
+            # execute live on Polymarket. Otherwise, paper trade it.
+            has_private_key = bool(os.getenv("POLYMARKET_PRIVATE_KEY"))
 
-            if use_live:
-                executed = self.strategy.execute_signals(signals, self._execute_trade)
-                result["trades_executed"] = len(executed)
+            for sig in signals:
+                is_real = not sig.market_id.startswith("sim-")
 
-                # Send Telegram alerts
-                for sig in executed:
-                    await self.telegram.send_trade_alert(
-                        action=sig.side,
-                        city=sig.sport,
-                        market_question=sig.market_question,
-                        outcome=sig.outcome,
-                        price=sig.polymarket_price,
-                        size_usd=sig.kelly_size,
-                        noaa_confidence=sig.bookmaker_prob,
-                        forecast_temp=sig.edge_pct,
-                        expected_value=sig.edge_pct,
-                        signal_strength=sig.confidence,
-                    )
-            elif signals:
-                # Paper mode
-                logger.info(
-                    "Found %d sports signals — paper mode (no private key)",
-                    len(signals),
-                )
-                for sig in signals:
-                    allowed, reason = self.pm.can_open_position(sig.kelly_size)
-                    if not allowed:
-                        logger.info("Skipping paper signal %s: %s", sig.id[:8], reason)
-                        continue
+                # Check position limits
+                allowed, reason = self.pm.can_open_position(sig.kelly_size)
+                if not allowed:
+                    logger.info("Skipping signal %s: %s", sig.id[:8], reason)
+                    continue
+
+                if is_real and has_private_key:
+                    # === LIVE EXECUTION on Polymarket ===
+                    try:
+                        order_id = self._execute_trade(sig)
+                        if order_id:
+                            sig.executed = True
+                            pos = Position(
+                                id=sig.id,
+                                market_id=sig.market_id,
+                                token_id=sig.token_id,
+                                city=sig.sport,
+                                target_date=sig.commence_time,
+                                side=sig.side,
+                                outcome=sig.outcome,
+                                entry_price=sig.polymarket_price,
+                                size_usd=sig.kelly_size,
+                                shares=sig.kelly_size / sig.polymarket_price if sig.polymarket_price > 0 else 0,
+                                noaa_confidence=sig.bookmaker_prob,
+                                forecast_temp_f=0.0,
+                                bucket_description=sig.event,
+                                order_id=order_id,
+                            )
+                            self.pm.open_position(pos)
+                            result["trades_executed"] += 1
+                            logger.info(
+                                "LIVE trade: %s %s @ %.4f, $%.2f -> order %s",
+                                sig.outcome, sig.event, sig.polymarket_price,
+                                sig.kelly_size, order_id,
+                            )
+                            await self.telegram.send_trade_alert(
+                                action=sig.side,
+                                city=sig.sport,
+                                market_question=sig.market_question,
+                                outcome=sig.outcome,
+                                price=sig.polymarket_price,
+                                size_usd=sig.kelly_size,
+                                noaa_confidence=sig.bookmaker_prob,
+                                forecast_temp=sig.edge_pct,
+                                expected_value=sig.edge_pct,
+                                signal_strength=sig.confidence,
+                            )
+                        else:
+                            sig.execution_error = "CLOB returned no order ID"
+                            logger.warning("Live trade failed (no order ID): %s", sig.event[:40])
+                    except Exception as exc:
+                        sig.execution_error = str(exc)
+                        logger.error("Live trade error for %s: %s", sig.id[:8], exc)
+                else:
+                    # === PAPER MODE ===
                     sig.executed = True
                     pos = Position(
                         id=sig.id,
@@ -469,6 +492,12 @@ class SportsArbScanner:
                     )
                     self.pm.open_position(pos)
                     result["trades_executed"] += 1
+                    mode = "paper(sim)" if not is_real else "paper(no key)"
+                    logger.info(
+                        "%s trade: %s %s @ %.4f, $%.2f",
+                        mode, sig.outcome, sig.event[:40],
+                        sig.polymarket_price, sig.kelly_size,
+                    )
 
         except Exception as exc:
             error_msg = f"Sports Scan #{scan_id} error: {exc}"
@@ -632,6 +661,8 @@ class SportsArbScanner:
             "last_markets_count": len(self._last_markets),
             "last_odds_count": len(self._last_odds),
             "odds_api_configured": self.odds_client.is_configured,
+            "private_key_configured": bool(os.getenv("POLYMARKET_PRIVATE_KEY")),
+            "execution_mode": "live" if bool(os.getenv("POLYMARKET_PRIVATE_KEY")) else "paper",
         }
 
     async def cleanup(self) -> None:
