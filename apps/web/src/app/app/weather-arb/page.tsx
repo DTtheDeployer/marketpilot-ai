@@ -512,8 +512,29 @@ export default function WeatherArbPage() {
           {positions.length === 0 ? (
             <div className="text-center py-8 text-surface-600">
               <Target className="h-10 w-10 mx-auto mb-3 text-surface-500" />
-              <p>No open positions</p>
-              <p className="text-xs mt-1">Positions will appear here when the bot finds opportunities</p>
+              {isRunning && signals.length > 0 ? (
+                <>
+                  <p className="font-medium text-surface-800">Scanning — {signals.length} opportunities detected</p>
+                  <p className="text-xs mt-1 max-w-md mx-auto">
+                    The bot found NOAA forecast edges but no matching Polymarket temperature markets are currently listed.
+                    It will auto-trade as soon as markets appear. This is normal — weather markets are listed periodically.
+                  </p>
+                  <div className="mt-4 inline-flex items-center gap-2 rounded-lg bg-surface-200/50 border border-surface-300 px-3 py-2 text-xs">
+                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                    Monitoring Polymarket for new temperature markets
+                  </div>
+                </>
+              ) : isRunning ? (
+                <>
+                  <p>Scanning for opportunities...</p>
+                  <p className="text-xs mt-1">The bot scans NOAA forecasts every 2 minutes and checks Polymarket for matching markets.</p>
+                </>
+              ) : (
+                <>
+                  <p>No open positions</p>
+                  <p className="text-xs mt-1">Start the bot to begin scanning for weather arbitrage opportunities.</p>
+                </>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">
