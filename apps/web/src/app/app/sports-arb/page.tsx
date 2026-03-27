@@ -114,19 +114,20 @@ export default function SportsArbPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStatus = useCallback(async () => {
+  const fetchStatus = useCallback(async (signal?: AbortSignal) => {
     try {
-      const res = await fetch(`${STRATEGY_URL}/sports-arb/status`);
+      const res = await fetch(`${STRATEGY_URL}/sports-arb/status`, { signal });
       const data = await res.json();
       setStatus(data);
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       setError("Cannot connect to strategy engine");
     }
   }, []);
 
-  const fetchSignals = useCallback(async () => {
+  const fetchSignals = useCallback(async (signal?: AbortSignal) => {
     try {
-      const res = await fetch(`${STRATEGY_URL}/sports-arb/signals`);
+      const res = await fetch(`${STRATEGY_URL}/sports-arb/signals`, { signal });
       if (!res.ok) return;
       const data = await res.json();
       setSignals(data.signals || []);
@@ -135,9 +136,9 @@ export default function SportsArbPage() {
     }
   }, []);
 
-  const fetchPositions = useCallback(async () => {
+  const fetchPositions = useCallback(async (signal?: AbortSignal) => {
     try {
-      const res = await fetch(`${STRATEGY_URL}/sports-arb/positions`);
+      const res = await fetch(`${STRATEGY_URL}/sports-arb/positions`, { signal });
       const data = await res.json();
       setPositions(data.open || []);
     } catch {
@@ -145,9 +146,9 @@ export default function SportsArbPage() {
     }
   }, []);
 
-  const fetchOdds = useCallback(async () => {
+  const fetchOdds = useCallback(async (signal?: AbortSignal) => {
     try {
-      const res = await fetch(`${STRATEGY_URL}/sports-arb/odds`);
+      const res = await fetch(`${STRATEGY_URL}/sports-arb/odds`, { signal });
       if (!res.ok) return;
       const data = await res.json();
       setOdds(data.odds || []);
@@ -157,19 +158,48 @@ export default function SportsArbPage() {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
+
     const load = async () => {
       setLoading(true);
-      await Promise.all([fetchStatus(), fetchSignals(), fetchPositions(), fetchOdds()]);
+      await Promise.all([
+        fetchStatus(signal),
+        fetchSignals(signal),
+        fetchPositions(signal),
+        fetchOdds(signal),
+      ]);
       setLoading(false);
     };
     load();
-    const interval = setInterval(() => {
-      fetchStatus();
-      fetchSignals();
-      fetchPositions();
-      fetchOdds();
-    }, 10000);
-    return () => clearInterval(interval);
+
+    let interval: ReturnType<typeof setInterval> | undefined;
+
+    const startPolling = () => {
+      interval = setInterval(() => {
+        fetchStatus(signal);
+        fetchSignals(signal);
+        fetchPositions(signal);
+        fetchOdds(signal);
+      }, 10000);
+    };
+
+    const stopPolling = () => {
+      if (interval) { clearInterval(interval); interval = undefined; }
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden) stopPolling(); else startPolling();
+    };
+
+    if (!document.hidden) startPolling();
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      controller.abort();
+      stopPolling();
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [fetchStatus, fetchSignals, fetchPositions, fetchOdds]);
 
   const handleStart = async () => {

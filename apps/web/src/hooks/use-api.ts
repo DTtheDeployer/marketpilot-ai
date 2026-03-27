@@ -18,6 +18,7 @@ interface UseApiReturn<T> {
 
 /**
  * Hook for fetching data from the API with loading/error states and optional polling.
+ * Pauses polling when the tab is hidden to avoid piling up requests.
  */
 export function useApi<T>(
   fetcher: () => Promise<{ success: boolean; data: T }>,
@@ -47,9 +48,12 @@ export function useApi<T>(
     }
   }, [options?.manual, refetch]);
 
-  // Polling
+  // Polling — pauses when tab is hidden
   useEffect(() => {
-    if (options?.pollInterval && options.pollInterval > 0) {
+    if (!options?.pollInterval || options.pollInterval <= 0) return;
+
+    const startPolling = () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
       intervalRef.current = setInterval(async () => {
         try {
           const res = await fetcher();
@@ -58,9 +62,33 @@ export function useApi<T>(
           // Silent fail on poll — don't disrupt UI
         }
       }, options.pollInterval);
+    };
 
-      return () => clearInterval(intervalRef.current);
+    const stopPolling = () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = undefined;
+      }
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        startPolling();
+      }
+    };
+
+    // Only start if tab is visible
+    if (!document.hidden) {
+      startPolling();
     }
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      stopPolling();
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [options?.pollInterval, fetcher]);
 
   return { data, loading, error, refetch };

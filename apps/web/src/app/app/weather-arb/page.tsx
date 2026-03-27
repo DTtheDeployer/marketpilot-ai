@@ -78,51 +78,76 @@ export default function WeatherArbPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStatus = useCallback(async () => {
+  const fetchStatus = useCallback(async (signal?: AbortSignal) => {
     try {
-      const res = await fetch(`${STRATEGY_URL}/weather-arb/status`);
+      const res = await fetch(`${STRATEGY_URL}/weather-arb/status`, { signal });
       const data = await res.json();
       setStatus(data);
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       setError("Cannot connect to strategy engine");
     }
   }, []);
 
-  const fetchSignals = useCallback(async () => {
+  const fetchSignals = useCallback(async (signal?: AbortSignal) => {
     try {
-      const res = await fetch(`${STRATEGY_URL}/weather-arb/signals`);
+      const res = await fetch(`${STRATEGY_URL}/weather-arb/signals`, { signal });
       if (!res.ok) return;
       const data = await res.json();
       const list = data.signals || data.data || [];
       setSignals(list);
-    } catch (err) {
-      console.error("Failed to fetch signals:", err);
+    } catch {
+      // silent
     }
   }, []);
 
-  const fetchPositions = useCallback(async () => {
+  const fetchPositions = useCallback(async (signal?: AbortSignal) => {
     try {
-      const res = await fetch(`${STRATEGY_URL}/weather-arb/positions`);
+      const res = await fetch(`${STRATEGY_URL}/weather-arb/positions`, { signal });
       const data = await res.json();
       setPositions(data.positions || data.data || []);
     } catch {
-      // Silent
+      // silent
     }
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
+
     const load = async () => {
       setLoading(true);
-      await Promise.all([fetchStatus(), fetchSignals(), fetchPositions()]);
+      await Promise.all([fetchStatus(signal), fetchSignals(signal), fetchPositions(signal)]);
       setLoading(false);
     };
     load();
-    const interval = setInterval(() => {
-      fetchStatus();
-      fetchSignals();
-      fetchPositions();
-    }, 10000);
-    return () => clearInterval(interval);
+
+    let interval: ReturnType<typeof setInterval> | undefined;
+
+    const startPolling = () => {
+      interval = setInterval(() => {
+        fetchStatus(signal);
+        fetchSignals(signal);
+        fetchPositions(signal);
+      }, 10000);
+    };
+
+    const stopPolling = () => {
+      if (interval) { clearInterval(interval); interval = undefined; }
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden) stopPolling(); else startPolling();
+    };
+
+    if (!document.hidden) startPolling();
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      controller.abort();
+      stopPolling();
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [fetchStatus, fetchSignals, fetchPositions]);
 
   const handleStart = async () => {
