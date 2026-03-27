@@ -127,32 +127,47 @@ class SportsArbScanner:
     # ------------------------------------------------------------------ #
 
     async def fetch_sports_markets(self) -> list[SportsMarket]:
-        """Fetch active sports markets from the Gamma API."""
+        """Fetch active sports markets from the Gamma API.
+
+        The Gamma API tag search is unreliable, so we fetch a broad set
+        of active markets and filter client-side by keyword matching.
+        """
         client = await self._get_http_client()
         markets: list[SportsMarket] = []
 
+        # Keywords that identify sports markets
+        sport_keywords = [
+            "nba finals", "nba championship", "stanley cup", "nhl",
+            "super bowl", "nfl", "world series", "mlb",
+            "premier league", "epl", "champions league", "uefa",
+            "ufc", "mma", "boxing",
+        ]
+
         try:
-            for tag in SPORTS_TAGS:
-                url = f"{GAMMA_API_URL}/markets"
-                params = {
-                    "tag": tag,
-                    "active": "true",
-                    "closed": "false",
-                    "limit": "100",
-                }
-                resp = await client.get(url, params=params)
-                if resp.status_code != 200:
-                    logger.warning("Gamma API returned %d for tag=%s", resp.status_code, tag)
+            # Fetch a broad set of active markets (no tag filter)
+            url = f"{GAMMA_API_URL}/markets"
+            params = {
+                "active": "true",
+                "closed": "false",
+                "limit": "200",
+            }
+            resp = await client.get(url, params=params)
+            if resp.status_code != 200:
+                logger.warning("Gamma API returned %d", resp.status_code)
+                return []
+
+            data = resp.json()
+            if not isinstance(data, list):
+                data = data.get("data", data.get("markets", []))
+
+            for raw_market in data:
+                question = raw_market.get("question", "").lower()
+                # Only keep markets that match sports keywords
+                if not any(kw in question for kw in sport_keywords):
                     continue
-
-                data = resp.json()
-                if not isinstance(data, list):
-                    data = data.get("data", data.get("markets", []))
-
-                for raw_market in data:
-                    parsed = SportsMarket.from_gamma_market(raw_market)
-                    if parsed:
-                        markets.append(parsed)
+                parsed = SportsMarket.from_gamma_market(raw_market)
+                if parsed:
+                    markets.append(parsed)
 
             # Deduplicate by market_id
             seen: set[str] = set()
@@ -162,7 +177,7 @@ class SportsArbScanner:
                     seen.add(m.market_id)
                     unique.append(m)
 
-            logger.info("Fetched %d unique sports markets from Gamma API", len(unique))
+            logger.info("Fetched %d sports markets from Gamma API", len(unique))
             return unique
 
         except Exception as exc:
